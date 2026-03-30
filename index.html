@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZagaPrime · Sales System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080b12;--s1:#0f1420;--s2:#161d2e;--s3:#1e2740;
+  --border:rgba(99,120,200,0.12);--border2:rgba(99,120,200,0.22);
+  --accent:#4f7ef8;--accent2:#7c6df0;--green:#10b981;--red:#f43f5e;
+  --amber:#f59e0b;--purple:#a78bfa;--cyan:#06b6d4;
+  --text:#e8eaf6;--muted:#6b7a9e;--dim:#3a4566;
+  --sans:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:10px;--r2:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5;display:flex;flex-direction:column;}
+
+/* ─── TOPBAR ─── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0;z-index:50;}
+.logo{font-size:17px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:8px;}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+.logo em{color:var(--accent);font-style:normal;}
+.top-stats{display:flex;gap:20px;align-items:center;}
+.ts{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.ts b{color:var(--text);font-size:14px;font-weight:600;}
+.ts.green b{color:var(--green);}
+.ts.amber b{color:var(--amber);}
+.ts.red b{color:var(--red);}
+.top-btns{display:flex;gap:8px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--r);font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;border:none;white-space:nowrap;}
+.btn-sm{padding:5px 11px;font-size:11px;}
+.btn-primary{background:var(--accent);color:white;}
+.btn-primary:hover{background:#3a6ef0;transform:translateY(-1px);}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--s2);color:var(--text);}
+.btn-green{background:rgba(16,185,129,0.15);color:var(--green);border:1px solid rgba(16,185,129,0.3);}
+.btn-red{background:rgba(244,63,94,0.15);color:var(--red);border:1px solid rgba(244,63,94,0.3);}
+.btn-amber{background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.3);}
+
+/* ─── MAIN LAYOUT ─── */
+.app{display:flex;flex:1;overflow:hidden;}
+
+/* ─── SIDEBAR ─── */
+.sidebar{width:200px;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.nav-group{padding:12px 8px 4px;}
+.nav-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--dim);padding:0 10px;margin-bottom:4px;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:var(--r);cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:all 0.12s;margin-bottom:1px;}
+.nav-item .icon{font-size:14px;width:18px;text-align:center;}
+.nav-item:hover{background:var(--s2);color:var(--text);}
+.nav-item.active{background:rgba(79,126,248,0.14);color:var(--accent);border-left:2px solid var(--accent);padding-left:8px;}
+.nav-count{margin-left:auto;background:var(--s3);border-radius:20px;padding:1px 7px;font-size:10px;font-family:var(--mono);}
+.nav-item.active .nav-count{background:rgba(79,126,248,0.2);color:var(--accent);}
+.sidebar-footer{margin-top:auto;padding:12px;border-top:1px solid var(--border);}
+.gs-connected{font-size:11px;color:var(--green);display:flex;align-items:center;gap:6px;}
+.gs-disconnected{font-size:11px;color:var(--amber);display:flex;align-items:center;gap:6px;cursor:pointer;}
+.gs-dot{width:6px;height:6px;border-radius:50%;}
+
+/* ─── MAIN CONTENT ─── */
+.main{flex:1;overflow:hidden;display:flex;position:relative;}
+.view{flex:1;overflow-y:auto;display:none;padding:20px;}
+.view.active{display:block;}
+.view-split{flex:1;overflow:hidden;display:none;flex-direction:row;}
+.view-split.active{display:flex;}
+
+/* ─── FILTER BAR ─── */
+.filter-bar{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.filter-bar input,.filter-bar select{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:6px 12px;font-family:var(--sans);font-size:12px;min-width:100px;transition:border-color 0.15s;height:32px;}
+.filter-bar select option{background:var(--s2);}
+.filter-bar input:focus,.filter-bar select:focus{outline:none;border-color:var(--accent);}
+.filter-bar input{min-width:180px;}
+.filter-sep{width:1px;height:24px;background:var(--border);}
+.filter-count{font-size:12px;color:var(--muted);margin-left:auto;white-space:nowrap;}
+
+/* ─── LEAD GRID ─── */
+.leads-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+.lead-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:16px;cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden;}
+.lead-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.lead-card.t1::before{background:var(--red);}
+.lead-card.t2::before{background:var(--amber);}
+.lead-card.t3::before{background:var(--accent);}
+.lead-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.3);}
+.lead-card.selected{border-color:var(--accent);background:var(--s2);}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
+.card-name{font-size:14px;font-weight:600;color:var(--text);line-height:1.3;}
+.card-owner{font-size:11px;color:var(--muted);margin-top:2px;}
+.badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;}
+.b-red{background:rgba(244,63,94,0.12);color:#fb7185;}
+.b-amber{background:rgba(245,158,11,0.12);color:#fbbf24;}
+.b-green{background:rgba(16,185,129,0.12);color:#34d399;}
+.b-blue{background:rgba(79,126,248,0.12);color:#93c5fd;}
+.b-purple{background:rgba(167,139,250,0.12);color:#c4b5fd;}
+.b-gray{background:rgba(107,122,158,0.12);color:var(--muted);}
+.b-cyan{background:rgba(6,182,212,0.12);color:#67e8f9;}
+.card-cat{font-size:11px;color:var(--muted);margin-top:6px;}
+.card-phone{font-size:11px;color:var(--dim);font-family:var(--mono);margin-top:4px;}
+.card-pitch{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5;border-top:1px solid var(--border);padding-top:6px;}
+.card-stages{margin-top:8px;display:flex;gap:3px;}
+.stage-dot{width:6px;height:6px;border-radius:50%;background:var(--dim);}
+.stage-dot.done{background:var(--green);}
+.stage-dot.fail{background:var(--red);}
+.stage-dot.active-s{background:var(--amber);}
+.card-priority{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;background:rgba(244,63,94,0.2);color:#fb7185;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:var(--mono);}
+
+/* ─── LEAD DETAIL PANEL ─── */
+.lead-panel{width:0;background:var(--s1);border-left:1px solid var(--border);overflow:hidden;transition:width 0.25s;flex-shrink:0;display:flex;flex-direction:column;}
+.lead-panel.open{width:420px;}
+.panel-header{padding:16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.panel-close{float:right;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:2px;}
+.panel-close:hover{color:var(--text);}
+.panel-biz{font-size:18px;font-weight:700;margin-bottom:2px;}
+.panel-cat{font-size:12px;color:var(--muted);}
+.panel-body{overflow-y:auto;flex:1;padding:16px;}
+.info-section{margin-bottom:16px;}
+.info-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);margin-bottom:8px;}
+.info-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid rgba(99,120,200,0.06);font-size:13px;}
+.info-row:last-child{border-bottom:none;}
+.info-key{min-width:100px;color:var(--muted);font-size:12px;flex-shrink:0;}
+.info-val{color:var(--text);flex:1;word-break:break-word;}
+.info-val a{color:var(--accent);text-decoration:none;}
+.info-val a:hover{text-decoration:underline;}
+.pitch-box{background:rgba(79,126,248,0.08);border:1px solid rgba(79,126,248,0.2);border-radius:var(--r);padding:12px;font-size:13px;color:var(--text);line-height:1.65;margin-bottom:12px;}
+.pitch-label{font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
+.notes-box{background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:var(--r);padding:12px;font-size:13px;color:var(--text);line-height:1.65;}
+.notes-label{font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
+.panel-cta{padding:16px;border-top:1px solid var(--border);flex-shrink:0;}
+.panel-cta .btn{width:100%;justify-content:center;font-size:14px;padding:12px;}
+.stage-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;}
+.ss-item{background:var(--s2);border-radius:var(--r);padding:8px 6px;text-align:center;}
+.ss-icon{font-size:14px;margin-bottom:2px;}
+.ss-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;}
+
+/* ─── SALES MODE ─── */
+.sales-mode{position:fixed;inset:0;background:var(--bg);z-index:200;display:none;flex-direction:column;}
+.sales-mode.open{display:flex;}
+.sm-header{display:flex;align-items:center;gap:16px;padding:14px 24px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0;}
+.sm-back{cursor:pointer;color:var(--muted);font-size:20px;transition:color 0.15s;}
+.sm-back:hover{color:var(--text);}
+.sm-biz{font-size:18px;font-weight:700;}
+.sm-meta{font-size:12px;color:var(--muted);margin-left:4px;}
+.sm-progress{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);}
+.sm-body{flex:1;overflow:hidden;display:grid;grid-template-columns:1fr 400px;gap:0;}
+.sm-left{overflow-y:auto;padding:20px 24px;border-right:1px solid var(--border);}
+.sm-right{overflow-y:auto;padding:20px 24px;background:var(--s1);}
+
+/* ─── SCRIPT TABS ─── */
+.script-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.st{padding:8px 16px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.12s;}
+.st.active{color:var(--accent);border-bottom-color:var(--accent);}
+.st:hover{color:var(--text);}
+.script-panel{display:none;}
+.script-panel.active{display:block;}
+.script-block{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;margin-bottom:12px;position:relative;}
+.script-block.highlight{border-color:rgba(79,126,248,0.4);background:rgba(79,126,248,0.05);}
+.sb-type{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.sb-title{font-size:13px;font-weight:700;margin-bottom:10px;}
+.sb-body{font-size:13px;line-height:1.85;color:rgba(232,234,246,0.85);font-family:var(--mono);background:var(--s1);border-radius:var(--r);padding:14px;white-space:pre-wrap;}
+.sb-biz{color:var(--accent);font-weight:600;}
+.copy-btn{position:absolute;top:12px;right:12px;padding:4px 10px;font-size:10px;border-radius:6px;background:rgba(79,126,248,0.15);border:1px solid rgba(79,126,248,0.3);color:#93c5fd;cursor:pointer;transition:all 0.12s;font-family:var(--sans);font-weight:600;}
+.copy-btn:hover{background:var(--accent);color:white;}
+.sb-note{font-size:11px;color:var(--muted);margin-top:8px;padding-left:10px;border-left:2px solid var(--border);line-height:1.55;}
+
+/* ─── STAGE CHECKLIST ─── */
+.checklist-title{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.stage-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:14px;margin-bottom:10px;transition:border-color 0.15s;}
+.stage-card.done-ok{border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.04);}
+.stage-card.done-fail{border-color:rgba(244,63,94,0.3);background:rgba(244,63,94,0.04);}
+.sc-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.sc-num{width:24px;height:24px;border-radius:50%;background:var(--s3);color:var(--muted);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono);}
+.stage-card.done-ok .sc-num{background:var(--green);color:white;}
+.stage-card.done-fail .sc-num{background:var(--red);color:white;}
+.sc-title{font-size:13px;font-weight:700;flex:1;}
+.sc-status{font-size:11px;padding:2px 8px;border-radius:20px;}
+.sc-status.pending{background:rgba(107,122,158,0.15);color:var(--muted);}
+.sc-status.success{background:rgba(16,185,129,0.15);color:var(--green);}
+.sc-status.fail{background:rgba(244,63,94,0.15);color:var(--red);}
+.sc-status.skip{background:rgba(245,158,11,0.12);color:var(--amber);}
+.sc-options{display:flex;gap:6px;flex-wrap:wrap;}
+.sc-opt{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all 0.12s;font-family:var(--sans);}
+.sc-opt:hover{background:var(--s3);color:var(--text);}
+.sc-opt.selected.success{background:rgba(16,185,129,0.2);border-color:rgba(16,185,129,0.4);color:var(--green);}
+.sc-opt.selected.fail{background:rgba(244,63,94,0.15);border-color:rgba(244,63,94,0.3);color:var(--red);}
+.sc-opt.selected.neutral{background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.3);color:var(--amber);}
+.sc-opt.selected.info{background:rgba(79,126,248,0.15);border-color:rgba(79,126,248,0.3);color:#93c5fd;}
+.sc-note{margin-top:8px;}
+.sc-note input{width:100%;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:6px 10px;font-size:12px;font-family:var(--sans);}
+.sc-note input:focus{outline:none;border-color:var(--accent);}
+.save-bar{position:sticky;bottom:0;background:var(--s1);border-top:1px solid var(--border);padding:12px 16px;display:flex;gap:8px;align-items:center;}
+.save-time{font-size:11px;color:var(--muted);flex:1;}
+
+/* ─── ANALYTICS ─── */
+.analytics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;}
+.metric-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:16px;}
+.mc-num{font-size:28px;font-weight:700;font-family:var(--mono);margin-bottom:2px;}
+.mc-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;}
+.mc-sub{font-size:11px;color:var(--dim);margin-top:4px;}
+.analytics-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.chart-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px;}
+.chart-title{font-size:13px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.funnel-bar{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.fb-label{min-width:120px;font-size:12px;color:var(--muted);}
+.fb-track{flex:1;height:24px;background:var(--s2);border-radius:4px;overflow:hidden;}
+.fb-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:11px;font-weight:700;color:white;transition:width 0.6s;min-width:24px;}
+.fb-count{min-width:30px;font-size:12px;font-family:var(--mono);color:var(--text);text-align:right;}
+.cat-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(99,120,200,0.06);font-size:12px;}
+.cat-row:last-child{border-bottom:none;}
+.cat-name{flex:1;color:var(--muted);}
+.cat-bar{width:80px;height:6px;background:var(--s2);border-radius:3px;overflow:hidden;}
+.cat-fill{height:100%;border-radius:3px;background:var(--accent);}
+.cat-num{min-width:20px;font-family:var(--mono);color:var(--text);}
+.activity-feed{max-height:300px;overflow-y:auto;}
+.af-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(99,120,200,0.06);font-size:12px;}
+.af-item:last-child{border-bottom:none;}
+.af-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.af-dot.green{background:var(--green);}
+.af-dot.red{background:var(--red);}
+.af-dot.amber{background:var(--amber);}
+.af-dot.blue{background:var(--accent);}
+.af-biz{font-weight:600;color:var(--text);}
+.af-action{color:var(--muted);}
+.af-time{margin-left:auto;color:var(--dim);font-size:11px;flex-shrink:0;}
+
+/* ─── FIND LEADS ─── */
+.find-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.find-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px;}
+.find-card h3{font-size:14px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.find-card p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
+.input-group{margin-bottom:12px;}
+.input-group label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);display:block;margin-bottom:6px;}
+.input-group input,.input-group select,.input-group textarea{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 12px;font-family:var(--sans);font-size:13px;transition:border-color 0.15s;}
+.input-group select option{background:var(--s2);}
+.input-group input:focus,.input-group select:focus,.input-group textarea:focus{outline:none;border-color:var(--accent);}
+.input-group textarea{min-height:80px;resize:vertical;}
+.ig-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.automation-steps{margin-top:12px;}
+.auto-step{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(99,120,200,0.06);font-size:13px;align-items:flex-start;}
+.auto-step:last-child{border-bottom:none;}
+.auto-num{width:22px;height:22px;border-radius:50%;background:rgba(79,126,248,0.15);color:var(--accent);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.auto-text{flex:1;color:var(--muted);line-height:1.55;}
+.auto-text strong{color:var(--text);}
+.api-pill{display:inline-block;font-size:10px;font-weight:700;background:rgba(167,139,250,0.15);color:var(--purple);border:1px solid rgba(167,139,250,0.3);border-radius:20px;padding:2px 8px;}
+
+/* ─── SETTINGS ─── */
+.settings-section{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px;margin-bottom:16px;max-width:680px;}
+.settings-title{font-size:14px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.settings-sub{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.55;}
+.code-block{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:14px;font-family:var(--mono);font-size:12px;color:var(--cyan);white-space:pre-wrap;line-height:1.7;margin-bottom:12px;}
+
+/* ─── EMPTY / LOADING ─── */
+.empty{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:0.4;}
+.empty-text{font-size:14px;}
+
+/* ─── TOAST ─── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--green);color:white;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;opacity:0;transition:all 0.3s;z-index:999;pointer-events:none;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ─── PAGE TITLE ─── */
+.page-title{font-size:20px;font-weight:700;margin-bottom:4px;}
+.page-sub{font-size:13px;color:var(--muted);margin-bottom:16px;}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo"><div class="logo-dot"></div>Zaga<em>Prime</em> <span style="font-size:11px;font-weight:400;color:var(--muted);margin-left:4px;">SALES SYSTEM</span></div>
+  <div class="top-stats">
+    <div class="ts">Total <b id="stat-total">0</b></div>
+    <div class="ts red">Hot <b id="stat-hot">0</b></div>
+    <div class="ts amber">Worked <b id="stat-worked">0</b></div>
+    <div class="ts green">Won <b id="stat-won">0</b></div>
+  </div>
+  <div class="top-btns">
+    <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+    <button class="btn btn-amber btn-sm" onclick="syncToSheets()" id="sync-btn">☁ Sync to Sheets</button>
+    <button class="btn btn-primary btn-sm" onclick="openFindLeads()">+ Find New Leads</button>
+  </div>
+</div>
+
+<div class="app">
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="nav-group">
+    <div class="nav-label">Leads</div>
+    <div class="nav-item active" onclick="showView('leads',this)" data-view="leads"><span class="icon">🎯</span>All Leads<span class="nav-count" id="nav-leads-count">0</span></div>
+    <div class="nav-item" onclick="showView('analytics',this)" data-view="analytics"><span class="icon">📊</span>Analytics</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Tools</div>
+    <div class="nav-item" onclick="showView('find',this)" data-view="find"><span class="icon">🔍</span>Find New Leads</div>
+    <div class="nav-item" onclick="showView('settings',this)" data-view="settings"><span class="icon">⚙️</span>Settings</div>
+  </div>
+  <div class="sidebar-footer">
+    <div id="gs-status" class="gs-disconnected" onclick="showView('settings',document.querySelector('[data-view=settings]'))">
+      <div class="gs-dot" style="background:var(--amber)"></div>Google Sheets: Setup
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEADS VIEW -->
+  <div class="view-split active" id="view-leads">
+    <div class="view active" style="padding:20px;flex:1;">
+      <!-- FILTER BAR -->
+      <div class="filter-bar">
+        <input type="text" id="f-search" placeholder="🔍  Search business, category..." oninput="applyFilters()">
+        <div class="filter-sep"></div>
+        <select id="f-state" onchange="applyFilters()"><option value="">All States</option></select>
+        <select id="f-county" onchange="applyFilters()"><option value="">All Counties</option></select>
+        <select id="f-city" onchange="applyFilters()"><option value="">All Cities</option></select>
+        <select id="f-category" onchange="applyFilters()"><option value="">All Categories</option></select>
+        <select id="f-tier" onchange="applyFilters()">
+          <option value="">All Tiers</option>
+          <option value="1">🔴 Tier 1 — Hot</option>
+          <option value="2">🟡 Tier 2 — Warm</option>
+          <option value="3">🔵 Tier 3 — Long</option>
+        </select>
+        <select id="f-web" onchange="applyFilters()">
+          <option value="">All Web Status</option>
+          <option value="none">No Website</option>
+          <option value="broken">Broken/Wrong</option>
+          <option value="outdated">Outdated</option>
+        </select>
+        <div class="filter-sep"></div>
+        <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+        <div class="filter-count" id="filter-count">0 leads</div>
+      </div>
+      <div class="leads-grid" id="leads-grid"></div>
+    </div>
+    <!-- LEAD DETAIL PANEL -->
+    <div class="lead-panel" id="lead-panel">
+      <div class="panel-header">
+        <span class="panel-close" onclick="closePanel()">✕</span>
+        <div class="panel-biz" id="panel-biz-name">—</div>
+        <div class="panel-cat" id="panel-biz-cat">—</div>
+      </div>
+      <div class="panel-body" id="panel-body"></div>
+      <div class="panel-cta">
+        <button class="btn btn-primary" id="panel-work-btn" onclick="openSalesMode()">⚡ Work This Lead</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS VIEW -->
+  <div class="view" id="view-analytics" style="display:none;">
+    <div class="page-title">Analytics & Metrics</div>
+    <div class="page-sub">Based on your logged activity across all leads</div>
+    <div class="analytics-grid" id="analytics-metrics"></div>
+    <div class="analytics-row">
+      <div class="chart-card"><div class="chart-title">📉 Conversion Funnel</div><div id="funnel-chart"></div></div>
+      <div class="chart-card"><div class="chart-title">📦 Leads by Category</div><div id="cat-chart"></div></div>
+    </div>
+    <div class="analytics-row">
+      <div class="chart-card"><div class="chart-title">📋 Stage Performance</div><div id="stage-perf"></div></div>
+      <div class="chart-card"><div class="chart-title">🕐 Recent Activity</div><div class="activity-feed" id="activity-feed"></div></div>
+    </div>
+  </div>
+
+  <!-- FIND LEADS VIEW -->
+  <div class="view" id="view-find" style="display:none;">
+    <div class="page-title">Find New Leads</div>
+    <div class="page-sub">Search a new area, import from CSV, or add leads manually</div>
+    <div class="find-grid">
+      <div class="find-card">
+        <h3>🗺️ Search by Area</h3>
+        <p>Filter your view or add leads from a specific region. Use the filters above to target your territory.</p>
+        <div class="ig-row">
+          <div class="input-group"><label>State</label><select id="new-state"><option value="NJ">New Jersey</option><option value="NY">New York</option><option value="PA">Pennsylvania</option><option value="CT">Connecticut</option></select></div>
+          <div class="input-group"><label>County</label><input type="text" id="new-county" placeholder="e.g. Sussex County"></div>
+        </div>
+        <div class="ig-row">
+          <div class="input-group"><label>City</label><input type="text" id="new-city" placeholder="e.g. Newton"></div>
+          <div class="input-group"><label>Category</label><select id="new-cat-search"><option value="">Any</option><option>Auto Repair</option><option>Hair Salon</option><option>Landscaping</option><option>Restaurant</option><option>Farm</option><option>Retail</option><option>B2B</option><option>Consignment</option></select></div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="searchArea()">Search This Area</button>
+      </div>
+      <div class="find-card">
+        <h3>➕ Add Lead Manually</h3>
+        <p>Found a business with no website? Add it directly to your pipeline.</p>
+        <div class="ig-row">
+          <div class="input-group"><label>Business Name *</label><input type="text" id="add-name" placeholder="Joe's Auto Shop"></div>
+          <div class="input-group"><label>Owner Name</label><input type="text" id="add-owner" placeholder="Joe Smith"></div>
+        </div>
+        <div class="ig-row">
+          <div class="input-group"><label>Category *</label><input type="text" id="add-cat" placeholder="Auto Repair"></div>
+          <div class="input-group"><label>Phone</label><input type="text" id="add-phone" placeholder="(973) 555-0100"></div>
+        </div>
+        <div class="ig-row">
+          <div class="input-group"><label>City *</label><input type="text" id="add-city" placeholder="Andover"></div>
+          <div class="input-group"><label>State</label><input type="text" id="add-state" placeholder="NJ" value="NJ"></div>
+        </div>
+        <div class="ig-row">
+          <div class="input-group"><label>County</label><input type="text" id="add-county" placeholder="Sussex County"></div>
+          <div class="input-group"><label>Tier</label><select id="add-tier"><option value="1">🔴 Tier 1 — Hot</option><option value="2">🟡 Tier 2 — Warm</option><option value="3">🔵 Tier 3 — Long</option></select></div>
+        </div>
+        <div class="input-group"><label>Website Status</label><select id="add-wstatus"><option value="none">No Website</option><option value="broken">Broken/Wrong Site</option><option value="outdated">Outdated Site</option></select></div>
+        <div class="input-group"><label>Pitch Angle</label><input type="text" id="add-pitch" placeholder="Why should they buy?"></div>
+        <div class="input-group"><label>Notes</label><textarea id="add-notes" placeholder="Anything specific about this lead..."></textarea></div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addManualLead()">Add to Pipeline</button>
+      </div>
+      <div class="find-card">
+        <h3>📥 Import from CSV / Google Sheets</h3>
+        <p>Export your Google Sheet as a CSV and paste the content below, or upload a CSV file.</p>
+        <div class="input-group"><label>CSV Content (paste here)</label><textarea id="csv-import" placeholder="business_name,owner_name,category,phone,city,state,county,zip,website_status,pitch_angle,notes&#10;Joe's Shop,Joe,Auto Repair,(973)555-0100,Newton,NJ,Sussex County,07860,none,No website found,Older business..." style="min-height:120px;font-family:var(--mono);font-size:11px;"></textarea></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="downloadTemplate()">⬇ CSV Template</button>
+          <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="importCSV()">Import Leads</button>
+        </div>
+      </div>
+      <div class="find-card">
+        <h3>🤖 Automation Roadmap</h3>
+        <p>How to scale this system to auto-find businesses without websites in any zip code.</p>
+        <div class="automation-steps">
+          <div class="auto-step"><div class="auto-num">1</div><div class="auto-text"><strong>Google Places API</strong> — Search any city + category, get all businesses. Then filter by missing websites. <span class="api-pill">API</span></div></div>
+          <div class="auto-step"><div class="auto-num">2</div><div class="auto-text"><strong>Bulk Website Checker</strong> — Run each result through a domain ping. If 404 or no domain = lead. Works with Python or n8n. <span class="api-pill">n8n</span></div></div>
+          <div class="auto-step"><div class="auto-num">3</div><div class="auto-text"><strong>Auto-populate this CRM</strong> — Push confirmed leads via CSV export or Google Sheets webhook straight into this dashboard.</div></div>
+          <div class="auto-step"><div class="auto-num">4</div><div class="auto-text"><strong>Scale by State</strong> — Run the same flow for NJ, NY, PA, CT. 100+ leads per day per region. Assign territories.</div></div>
+          <div class="auto-step"><div class="auto-num">5</div><div class="auto-text"><strong>AI Pitch Generator</strong> — GPT-4 generates a custom pitch angle for each lead based on category + web status. Already built in ZagaPrime AI Hub. <span class="api-pill">AI</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS VIEW -->
+  <div class="view" id="view-settings" style="display:none;">
+    <div class="page-title">Settings</div>
+    <div class="page-sub">Configure Google Sheets sync and data management</div>
+    <div class="settings-section">
+      <div class="settings-title">📊 Google Sheets Integration</div>
+      <div class="settings-sub">Paste your published CSV URL. The system tries a direct connection first, then automatically falls back through multiple CORS proxies — no extra setup needed.</div>
+
+      <div class="input-group">
+        <label>Your Published Google Sheet CSV URL</label>
+        <input type="text" id="gs-url"
+          value="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ80amuS0yvQXn1NBOMB5sWCqpYr7MgY-ky-Bmehq8-LpoQ1s474PYgHPJqgCGvZP7USCPFn-wThOOy/pub?output=csv"
+          style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 12px;font-family:var(--mono);font-size:11px;width:100%;">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="syncToSheets()">&#x26A1; Sync All Data to Sheets</button>
+        <button class="btn btn-ghost" onclick="testGoogleSheet()">&#x1F517; Open Sheet in Browser</button>
+        <button class="btn btn-amber" onclick="toggleAutoSync()">&#x1F501; Auto-Sync (every 5 min)</button>
+      </div>
+      <div id="gs-sync-status" style="font-size:11px;color:var(--muted);margin-top:8px;"></div>
+
+      <div style="margin-top:20px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:var(--r);padding:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:8px;">⚡ One-Time Setup: Google Apps Script Web App</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.65;margin-bottom:10px;">This makes the Sync button automatically push all lead data and stage tracking into your LeadFunnel sheet — no manual steps.</div>
+        <div class="automation-steps">
+          <div class="auto-step"><div class="auto-num">1</div><div class="auto-text">Open your LeadFunnel sheet → <strong>Extensions → Apps Script</strong></div></div>
+          <div class="auto-step"><div class="auto-num">2</div><div class="auto-text">Delete any existing code, paste the script from the <strong>"Apps Script Code"</strong> section below</div></div>
+          <div class="auto-step"><div class="auto-num">3</div><div class="auto-text"><strong>Deploy → New deployment → Web app</strong> → Execute as: Me → Who has access: Anyone → Deploy</div></div>
+          <div class="auto-step"><div class="auto-num">4</div><div class="auto-text">Copy the web app URL, paste it in the <strong>"Web App URL"</strong> field below, click Save</div></div>
+        </div>
+        <div class="input-group" style="margin-top:12px;">
+          <label>Google Apps Script Web App URL</label>
+          <input type="text" id="gs-webapp-url" placeholder="https://script.google.com/macros/s/YOUR_ID/exec" style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 12px;font-family:var(--mono);font-size:11px;width:100%;" oninput="saveWebAppUrl()">
+        </div>
+        <button class="btn btn-green btn-sm" onclick="testWebApp()" style="margin-top:4px;">Test Connection</button>
+      </div>
+
+      <div style="margin-top:20px;">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Required Column Headers in Your Sheet</div>
+        <div class="code-block">business_name | owner_name | category | phone | address | city | county | state | zip | website_status | pitch_angle | tier | notes</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">
+          website_status values: <code style="background:var(--s3);padding:2px 6px;border-radius:4px;color:var(--cyan)">none</code>
+          <code style="background:var(--s3);padding:2px 6px;border-radius:4px;color:var(--cyan)">broken</code>
+          <code style="background:var(--s3);padding:2px 6px;border-radius:4px;color:var(--cyan)">outdated</code>
+          &nbsp;&nbsp;tier: <code style="background:var(--s3);padding:2px 6px;border-radius:4px;color:var(--cyan)">1</code>
+          <code style="background:var(--s3);padding:2px 6px;border-radius:4px;color:var(--cyan)">2</code>
+          <code style="background:var(--s3);padding:2px 6px;border-radius:4px;color:var(--cyan)">3</code>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">How to publish your sheet (one-time setup)</div>
+        <div class="automation-steps">
+          <div class="auto-step"><div class="auto-num">1</div><div class="auto-text">In Google Sheets: <strong>File &#x2192; Share &#x2192; Publish to web</strong></div></div>
+          <div class="auto-step"><div class="auto-num">2</div><div class="auto-text">First dropdown: choose your sheet tab name. Second dropdown: choose <strong>Comma-separated values (.csv)</strong></div></div>
+          <div class="auto-step"><div class="auto-num">3</div><div class="auto-text">Click <strong>Publish</strong> and confirm. Copy the link — it must end with <code style="background:var(--s3);padding:1px 5px;border-radius:3px;color:var(--cyan)">?output=csv</code></div></div>
+          <div class="auto-step"><div class="auto-num">4</div><div class="auto-text">Paste the URL above and click <strong>Connect &amp; Sync Now</strong>. Done — your sheet data loads automatically.</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">📜 Apps Script Code — Copy &amp; Paste into Google Apps Script</div>
+      <div class="settings-sub">Paste this into Extensions → Apps Script in your LeadFunnel sheet. Then deploy as a web app.</div>
+      <div style="position:relative;">
+        <button onclick="copyAppsScript()" style="position:absolute;top:8px;right:8px;z-index:2;background:rgba(79,126,248,0.2);border:1px solid rgba(79,126,248,0.3);color:#93c5fd;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:var(--sans);font-weight:600;">Copy</button>
+        <div class="code-block" id="apps-script-code" style="font-size:11px;max-height:280px;overflow-y:auto;padding-right:60px;">// ZagaPrime LeadFunnel — Google Apps Script Web App
+// Paste into Extensions > Apps Script, then Deploy > New Deployment > Web App
+// Execute as: Me | Who has access: Anyone
+
+const SHEET_ID = &#x27;1Sb4_mejZZR7UuOwzc3a6CK5gjfF5NeX__g6zN0G_boM&#x27;;
+const LEADS_SHEET = &#x27;Sheet1&#x27;;
+const ACTIVITY_SHEET = &#x27;Activity&#x27;;
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    
+    if (data.type === &#x27;sync_leads&#x27;) {
+      syncLeads(ss, data.leads);
+    }
+    if (data.type === &#x27;sync_activity&#x27;) {
+      syncActivity(ss, data.activity, data.leads);
+    }
+    if (data.type === &#x27;full_sync&#x27;) {
+      syncLeads(ss, data.leads);
+      syncActivity(ss, data.activity, data.leads);
+      formatSheets(ss);
+    }
+    
+    return ContentService.createTextOutput(
+      JSON.stringify({success: true, timestamp: new Date().toISOString()})
+    ).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(
+      JSON.stringify({success: false, error: err.message})
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput(
+    JSON.stringify({status: &#x27;ZagaPrime LeadFunnel webhook is live&#x27;, time: new Date().toISOString()})
+  ).setMimeType(ContentService.MimeType.JSON);
+}
+
+function syncLeads(ss, leads) {
+  let sheet = ss.getSheetByName(LEADS_SHEET);
+  if (!sheet) sheet = ss.insertSheet(LEADS_SHEET);
+  
+  const headers = [&#x27;priority&#x27;,&#x27;business_name&#x27;,&#x27;owner_name&#x27;,&#x27;category&#x27;,&#x27;phone&#x27;,
+    &#x27;address&#x27;,&#x27;city&#x27;,&#x27;county&#x27;,&#x27;state&#x27;,&#x27;zip&#x27;,&#x27;website_status&#x27;,
+    &#x27;online_presence&#x27;,&#x27;pitch_angle&#x27;,&#x27;tier&#x27;,&#x27;years_in_business&#x27;,&#x27;notes&#x27;,
+    &#x27;stage_research&#x27;,&#x27;stage_first_call&#x27;,&#x27;stage_email_sent&#x27;,&#x27;stage_discovery_call&#x27;,
+    &#x27;stage_proposal_sent&#x27;,&#x27;stage_follow_up&#x27;,&#x27;stage_decision&#x27;,&#x27;stage_notes&#x27;,
+    &#x27;deal_value&#x27;,&#x27;last_contacted&#x27;,&#x27;next_action&#x27;,&#x27;next_action_date&#x27;,&#x27;assigned_to&#x27;,&#x27;date_added&#x27;];
+  
+  sheet.clearContents();
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  const rows = leads.map(l => headers.map(h => {
+    if (h === &#x27;stage_research&#x27;) return l._stages?.research?.value || &#x27;&#x27;;
+    if (h === &#x27;stage_first_call&#x27;) return l._stages?.first_call?.value || &#x27;&#x27;;
+    if (h === &#x27;stage_email_sent&#x27;) return l._stages?.email_sent?.value || &#x27;&#x27;;
+    if (h === &#x27;stage_discovery_call&#x27;) return l._stages?.discovery_call?.value || &#x27;&#x27;;
+    if (h === &#x27;stage_proposal_sent&#x27;) return l._stages?.proposal_sent?.value || &#x27;&#x27;;
+    if (h === &#x27;stage_follow_up&#x27;) return l._stages?.follow_up?.value || &#x27;&#x27;;
+    if (h === &#x27;stage_decision&#x27;) return l._stages?.decision?.value || &#x27;&#x27;;
+    if (h === &#x27;stage_notes&#x27;) return l._stages ? Object.values(l._stages).map(s=>s.note).filter(Boolean).join(&#x27; | &#x27;) : &#x27;&#x27;;
+    return l[h] !== undefined ? String(l[h]) : &#x27;&#x27;;
+  }));
+  
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+  formatSheets(ss);
+}
+
+function syncActivity(ss, activity, leads) {
+  let sheet = ss.getSheetByName(ACTIVITY_SHEET);
+  if (!sheet) sheet = ss.insertSheet(ACTIVITY_SHEET);
+  
+  const headers = [&#x27;business_name&#x27;,&#x27;category&#x27;,&#x27;city&#x27;,&#x27;stage&#x27;,&#x27;outcome&#x27;,&#x27;note&#x27;,&#x27;timestamp&#x27;];
+  sheet.clearContents();
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  const rows = [];
+  Object.entries(activity || {}).forEach(([leadId, act]) => {
+    const lead = leads.find(l => l.id === leadId) || {};
+    Object.entries(act.stages || {}).forEach(([stageId, sv]) => {
+      rows.push([lead.name||&#x27;&#x27;, lead.category||&#x27;&#x27;, lead.city||&#x27;&#x27;, stageId, sv.value||&#x27;&#x27;, sv.note||&#x27;&#x27;, sv.timestamp||&#x27;&#x27;]);
+    });
+  });
+  
+  if (rows.length > 0) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+}
+
+function formatSheets(ss) {
+  const sheet = ss.getSheetByName(LEADS_SHEET);
+  if (!sheet) return;
+  const lastCol = sheet.getLastColumn();
+  if (lastCol < 1) return;
+  
+  // Header row: dark background, white text, bold
+  const headerRange = sheet.getRange(1, 1, 1, lastCol);
+  headerRange.setBackground(&#x27;#1e293b&#x27;);
+  headerRange.setFontColor(&#x27;#ffffff&#x27;);
+  headerRange.setFontWeight(&#x27;bold&#x27;);
+  headerRange.setFontSize(11);
+  
+  // Freeze header row
+  sheet.setFrozenRows(1);
+  
+  // Color code tier column (col 14 = tier)
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    for (let i = 2; i <= lastRow; i++) {
+      const tierCell = sheet.getRange(i, 14);
+      const tier = tierCell.getValue();
+      if (tier == 1) sheet.getRange(i, 1, 1, lastCol).setBackground(&#x27;#fef2f2&#x27;);
+      else if (tier == 2) sheet.getRange(i, 1, 1, lastCol).setBackground(&#x27;#fffbeb&#x27;);
+      else if (tier == 3) sheet.getRange(i, 1, 1, lastCol).setBackground(&#x27;#eff6ff&#x27;);
+    }
+  }
+  
+  // Auto-resize all columns
+  sheet.autoResizeColumns(1, lastCol);
+}</div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">🗃️ Data Management</div>
+      <div class="settings-sub">All activity data is stored in your browser's localStorage. Export regularly to keep a backup.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="exportCSV()">⬇ Export All Leads CSV</button>
+        <button class="btn btn-ghost" onclick="exportAnalytics()">⬇ Export Analytics CSV</button>
+        <button class="btn btn-ghost" onclick="clearAnalytics()">🗑 Clear Activity Data</button>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--muted);" id="storage-info"></div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">📬 Your Details</div>
+      <div class="settings-sub">Auto-fill your contact info in email templates.</div>
+      <div class="ig-row">
+        <div class="input-group"><label>Your Name</label><input type="text" id="set-name" placeholder="Kelvin Osazee" oninput="saveSettings()"></div>
+        <div class="input-group"><label>Your Email</label><input type="text" id="set-email" placeholder="kelvin@zagaprime.com" oninput="saveSettings()"></div>
+      </div>
+      <div class="input-group"><label>Your Phone</label><input type="text" id="set-phone" placeholder="(555) 000-0000" oninput="saveSettings()"></div>
+      <div class="input-group"><label>Company</label><input type="text" id="set-company" placeholder="ZagaPrime / Apex Builders" oninput="saveSettings()"></div>
+    </div>
+  </div>
+
+</div><!-- end main -->
+</div><!-- end app -->
+
+<!-- SALES MODE (FULL SCREEN OVERLAY) -->
+<div class="sales-mode" id="sales-mode">
+  <div class="sm-header">
+    <span class="sm-back" onclick="closeSalesMode()" title="Back to leads">←</span>
+    <div>
+      <div class="sm-biz" id="sm-biz-name">Business Name</div>
+      <div class="sm-meta" id="sm-biz-meta">Category · City, State</div>
+    </div>
+    <div id="sm-badges" style="display:flex;gap:6px;margin-left:8px;"></div>
+    <div class="sm-progress">
+      <span id="sm-progress-text" style="font-size:12px;"></span>
+    </div>
+    <button class="btn btn-green btn-sm" onclick="saveSalesData()" style="margin-left:8px;">💾 Save Progress</button>
+  </div>
+  <div class="sm-body">
+    <!-- LEFT: SCRIPTS -->
+    <div class="sm-left">
+      <div class="script-tabs">
+        <div class="st active" onclick="switchScriptTab('opener',this)">📞 Opener</div>
+        <div class="st" onclick="switchScriptTab('hook',this)">🎯 Hook</div>
+        <div class="st" onclick="switchScriptTab('offer',this)">📦 Offer</div>
+        <div class="st" onclick="switchScriptTab('email',this)">✉️ Email</div>
+        <div class="st" onclick="switchScriptTab('voicemail',this)">🎤 Voicemail</div>
+        <div class="st" onclick="switchScriptTab('objections',this)">🛡️ Objections</div>
+      </div>
+      <div id="script-content"></div>
+    </div>
+    <!-- RIGHT: CHECKLIST -->
+    <div class="sm-right">
+      <div class="checklist-title">📋 Stage Tracker<span style="font-size:11px;font-weight:400;color:var(--muted);margin-left:4px;">— log each step</span></div>
+      <div id="stage-checklist"></div>
+      <div class="save-bar">
+        <div class="save-time" id="save-time-label">Not saved yet</div>
+        <button class="btn btn-ghost btn-sm" onclick="closeSalesMode()">Close</button>
+        <button class="btn btn-primary btn-sm" onclick="saveSalesData()">Save & Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast">✓ Saved</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════
+const INITIAL_LEADS = [
+  {id:'L001',name:'Made In the Shade',owner:null,category:'Antique / Lamp Shop',address:'125 Main St',city:'Andover',county:'Sussex County',state:'NJ',zip:'07821',phone:'(973) 786-7501',email:null,websiteStatus:'broken',onlinePresence:'Wrong website listed — goes to an unrelated jewelry maker',pitchAngle:'Wrong website is actively sending your customers to a different company — urgent and fixable',hookType:'broken',tier:1,priority:1,yearsInBusiness:'25+',googleRating:null,notes:'PRIORITY LEAD. 25+ years on Main Street. Anyone who Googles "Made In the Shade Andover" gets sent to a completely different company. They almost certainly don\'t know this. Open with the broken website revelation.'},
+  {id:'L002',name:'Country Classic Haircutters',owner:null,category:'Hair Salon',address:'189 Main St',city:'Andover',county:'Sussex County',state:'NJ',zip:'07821',phone:'(973) 786-5179',email:null,websiteStatus:'none',onlinePresence:'Directory listings only — no website, no social found',pitchAngle:'Online booking system = new clients on autopilot, fewer no-shows, appointments booked 24/7',hookType:'none',tier:1,priority:2,yearsInBusiness:null,googleRating:null,notes:'No website, no booking system. Walk-in only. Best pitch: booking system pays for itself in first month through reduced no-shows and after-hours bookings.'},
+  {id:'L003',name:'F&J Auto & Truck Repairs',owner:'Frank',category:'Auto Repair',address:'Andover area',city:'Andover',county:'Sussex County',state:'NJ',zip:'07821',phone:null,email:null,websiteStatus:'none',onlinePresence:'YellowPages + Nextdoor only — no website',pitchAngle:'Mechanic searches on Google are high-intent — people call whoever shows up first when their car breaks',hookType:'none',tier:1,priority:3,yearsInBusiness:null,googleRating:null,notes:'Owner is Frank. Great local rep — "hidden jewel in Sussex County" per a YP reviewer. Auto repair is one of the best Google Ads niches — high urgency, high local intent. Zero digital presence.'},
+  {id:'L004',name:'Green Visions Landscaping',owner:null,category:'Landscaping',address:'3A Smith St',city:'Andover',county:'Sussex County',state:'NJ',zip:'07821',phone:'(973) 786-7982',email:null,websiteStatus:'none',onlinePresence:'D&B and Manta listings — unclaimed, no website',pitchAngle:'Competitors showing up on Google for "landscaper near me" — you\'re invisible, they\'re getting your leads',hookType:'competitor',tier:1,priority:4,yearsInBusiness:'24+',googleRating:null,notes:'In business since 2001. Zero web presence. Landscaping is one of the highest-converting Google Ads niches — homeowners searching = ready to hire. Show them a live Google search on the call.'},
+  {id:'L005',name:'Fancy Pants Kids Consignment',owner:null,category:'Kids Consignment',address:'127 Main St',city:'Andover',county:'Sussex County',state:'NJ',zip:'07821',phone:'(973) 786-5278',email:null,websiteStatus:'none',onlinePresence:'Nextdoor listing only — no website, no Instagram',pitchAngle:'Parents search before they drive — boutique site + Google Ads = shoppers planning trips to Andover find you first',hookType:'none',tier:1,priority:5,yearsInBusiness:null,googleRating:null,notes:'Described in press as "feels like an upscale boutique, not a consignment shop." Strong positioning, zero digital return on it. Parents absolutely research consignment shops before making the drive.'},
+  {id:'L006',name:"Cahill's Farm",owner:null,category:'Farm / Garden Center',address:'311 Pequest Rd',city:'Andover',county:'Sussex County',state:'NJ',zip:'07821',phone:'(973) 786-5429',email:null,websiteStatus:'none',onlinePresence:'Facebook only — no website',pitchAngle:'47 years of community trust with zero Google visibility — seasonal Google Ads = consistent farm market traffic',hookType:'none',tier:1,priority:6,yearsInBusiness:'47+',googleRating:null,notes:'Family farm since 1977. Facebook is their only online presence. Strong angle: "You\'ve been here 47 years — people who don\'t already know you can\'t find you online."'},
+  {id:'L007',name:'ReStyle ReSale Boutique',owner:'Carolyn',category:'Vintage / Resale',address:'127 Main St',city:'Andover',county:'Sussex County',state:'NJ',zip:'07821',phone:null,email:null,websiteStatus:'none',onlinePresence:'Google Maps + Nextdoor only — no website, phone unlisted',pitchAngle:'Vintage market is booming — boutique site + Google Ads reaches shoppers who search before they drive',hookType:'none',tier:1,priority:7,yearsInBusiness:'15+',googleRating:null,notes:'Owner is Carolyn. 15+ years in business. No phone listed publicly. Match her curation aesthetic in the pitch — this shop has personality, your site pitch should reflect that.'},
+  {id:'L008',name:'Great Andover Antique Village',owner:null,category:'Antique Mall',address:'122 Main St',city:'Andover',county:'Sussex County',state:'NJ',zip:'07821',phone:'(973) 786-6384',email:null,websiteStatus:'none',onlinePresence:'Facebook + directory listings only',pitchAngle:'Antique shoppers plan trips online — photo-forward site + Google Ads = destination buyers finding you before they drive out',hookType:'none',tier:1,priority:8,yearsInBusiness:null,googleRating:null,notes:'5-building antique complex on Main St. High foot traffic already. Best angle: destination shopping behavior — people Google and look at photos before committing to a drive.'},
+  {id:'L009',name:'APC Thrift Store',owner:null,category:'Thrift Retail',address:'15 Lenape Rd',city:'Andover',county:'Sussex County',state:'NJ',zip:'07821',phone:null,email:null,websiteStatus:'none',onlinePresence:'Google Maps pin only — no reviews, no phone, no rating',pitchAngle:'Thrift is booming — getting found on Google = consistent foot traffic without spending on ads',hookType:'none',tier:1,priority:9,yearsInBusiness:null,googleRating:null,notes:'Extremely limited presence. No phone listed, no reviews. Very limited hours (Wed & Sat only). Harder cold call — may need walk-in approach. Lowest phone contact probability.'},
+  {id:'L010',name:'Blind Brook Farm',owner:null,category:'Farm',address:'70 Goodale Rd',city:'Newton',county:'Sussex County',state:'NJ',zip:'07860',phone:'(973) 699-0489',email:null,websiteStatus:'none',onlinePresence:'County farm directory only — no web presence',pitchAngle:'Seasonal Google Ads: firewood buyers in fall, lambs in spring, boarding year-round = direct sales without phone tag',hookType:'none',tier:1,priority:10,yearsInBusiness:null,googleRating:null,notes:'Horse boarding, lambs, firewood. Phone-only business. Frame Google Ads as a seasonal faucet — turn it on when demand peaks.'},
+  {id:'L011',name:'Brickyard Farm',owner:null,category:'Farm',address:'50 Greendale Rd',city:'Newton',county:'Sussex County',state:'NJ',zip:'07860',phone:'(973) 919-0309',email:null,websiteStatus:'none',onlinePresence:'County farm directory only — zero digital footprint',pitchAngle:'Local food demand is up — zero competition online in this niche means first-mover Google advantage',hookType:'none',tier:1,priority:11,yearsInBusiness:null,googleRating:null,notes:'Free range eggs, raw fleece, wool. Zero digital presence. Local food buyers are habitual online searchers. First-mover advantage since there are few competitors online in this specific niche.'},
+  {id:'L012',name:'Advantage EDM',owner:'Alex Gilsenan',category:'B2B / Wire EDM Manufacturing',address:'38 Route 206',city:'Andover',county:'Sussex County',state:'NJ',zip:'07821',phone:'(973) 786-0177',email:null,websiteStatus:'outdated',onlinePresence:'advantageedm.com — live but built on 2000s-era .asp tech, no SEO, no Google Ads',pitchAngle:'B2B buyers research online before calling — an outdated site signals the wrong thing to procurement teams doing due diligence',hookType:'outdated',tier:2,priority:12,yearsInBusiness:null,googleRating:null,notes:'President: Alex Gilsenan. Address him directly. Old ASP website = immediate credibility problem for B2B buyers. Each new B2B machining client is worth thousands. Email first, then call. This is your highest-value potential deal.'},
+  {id:'L013',name:'Sutherland Packaging',owner:null,category:'B2B Packaging Manufacturing',address:'254 Brighton Rd',city:'Andover',county:'Sussex County',state:'NJ',zip:'07821',phone:'(973) 786-5141',email:null,websiteStatus:'outdated',onlinePresence:'sutherlandpackaging.com — exists but weak SEO and low inbound performance',pitchAngle:'$15M company leaving B2B leads on the table through weak digital marketing — LinkedIn + Google = more inbound',hookType:'weak_seo',tier:3,priority:13,yearsInBusiness:'60+',googleRating:null,notes:'51-200 employees, ~$15M revenue. They have marketing resources — pitch is digital marketing strategy, not a basic website build. Likely need to reach sales/marketing dept, not just the owner.'}
+];
+
+// ══════════════════════════════════════════════════════
+// SCRIPTS
+// ══════════════════════════════════════════════════════
+const SCRIPTS = {
+  opener:{
+    standard:{
+      title:'Standard Cold Call Opener',
+      body:`Hey, is this [owner] / the owner of {BIZ}?
+
+Hey [Name] — my name is {ME}, calling from {COMPANY}. We're a digital marketing company out of New Jersey. Super quick — got about 60 seconds?
+
+[YES → go to hook]
+[BUSY → "No problem — when's a better time to call back?"]
+[WHO IS THIS → "I'm {ME} from {COMPANY} — I came across {BIZ} doing some local research and noticed something I thought you'd want to know about. Two minutes?"]`,
+      note:'Warm, confident, not scripted-sounding. The "60 seconds" gets a micro-commitment.'
+    }
+  },
+  hooks:{
+    none:{title:'No Website Hook',body:`So I was researching local businesses in {CITY} and came across {BIZ}. You've got great word of mouth in the area — people really speak highly of you.
+
+But when I searched for you online, I couldn't pull up a website. And honestly — that means right now when someone in {COUNTY} types "{CATEGORY} near me" into Google, you're invisible. Those customers are going straight to your competitors.
+
+That's exactly the problem we solve.`,note:'Pause after "straight to your competitors." Let it land.'},
+    broken:{title:'Wrong/Broken Website Hook',body:`I want to flag something you probably don't know about: I Googled "{BIZ}" and the website coming up for your business actually belongs to a completely different company — not you at all. So right now, anyone who searches for {BIZ} gets sent somewhere else entirely.
+
+For a business that's been part of this community for years, that's a real problem — and it's probably been happening for a while without you realizing it.`,note:'PAUSE after this. Let them react. The alarm is your opening. Don\'t rush to the offer.'},
+    competitor:{title:'Competitor Gap Hook',body:`So I actually searched "{CATEGORY} near me" in {CITY} right before calling you — and I want to show you what came up.
+
+[Their competitors' names] showed up at the top. {BIZ} didn't appear anywhere.
+
+That's not a knock on you — it just means those companies are getting calls that should be going to you. And here's the thing — it's a completely fixable problem.`,note:'If you can, do this search live on the call and read the results. Real-time proof is powerful.'},
+    outdated:{title:'Outdated Website Hook',body:`I took a look at your current website before calling. I can see you've built a real business here — but the site is running on older technology that doesn't show up well in Google search, and there's no way for people to find you when they're searching for what you do online.
+
+For a B2B operation like {BIZ}, buyers research online before they ever pick up the phone. What your site signals to them matters.`,note:'Frame as credibility/trust issue for B2B. Not about aesthetics — about what buyers think when they see it.'},
+    weak_seo:{title:'Weak SEO / Digital Marketing Hook',body:`I was looking at {BIZ}'s online presence before reaching out. You've got a site, which is a solid foundation — but it's not generating the inbound leads it should for a company your size.
+
+When I search for {CATEGORY} in New Jersey, you're not showing up on the first page. Your competitors are. For a business doing your volume, that's leaving real revenue on the table every single month.`,note:'For larger companies — emphasize revenue impact, not just visibility.'}
+  },
+  offer:{
+    full:{title:'Full Package Offer',body:`What we do is a full digital presence package — three things together:
+
+One: a professional website — clean, fast, and built to show up on Google.
+
+Two: Google Ads — so when someone searches for {CATEGORY} in {CITY} right now, {BIZ} shows up at the top instead of your competitors.
+
+Three: local SEO — we optimize everything so you rank in Google Maps and organic search without paying per click every time.
+
+Most of our clients start seeing new inquiries within the first 30 days. We're a local NJ company, we handle everything, and pricing is designed for small businesses.
+
+I'd love to do a free 15-minute call to show you exactly what we'd build for {BIZ}. No pressure. Would [Day] or [Day] work?`,note:'Number the three items. People remember numbered lists. Always end by offering two specific days.'}
+  },
+  email:{
+    standard:{title:'Standard Email — Full Package',subject:'Subject: {BIZ} — people are searching online and can\'t find you',body:`Hi [Name],
+
+My name is {ME} — I run {COMPANY}, a digital marketing company based in New Jersey.
+
+I came across {BIZ} while researching local {CITY} businesses. {PITCH_ANGLE}.
+
+Here's what we'd put together for {BIZ}:
+
+→ A professional website that shows up when people search for {CATEGORY} in {CITY}
+→ Google Ads that put you at the top when someone searches right now
+→ Local SEO so you rank in Google Maps and start generating leads without paying per click
+
+Most of our clients see new inquiries within the first 30 days.
+
+Would you be open to a free 15-minute call this week? I'd love to show you exactly what we'd build.
+
+— {ME}
+{COMPANY} | {EMAIL} | {PHONE}`,note:'Send same day after a call attempt. Personalize the subject line — that\'s what gets opened.'},
+    broken:{title:'URGENT: Wrong Website Email — Made In the Shade',subject:'Subject: Heads up — your website is sending customers to the wrong business',body:`Hi [Name],
+
+My name is {ME} — I'm with {COMPANY}, a digital marketing company based in New Jersey.
+
+I want to flag something important: I searched for {BIZ} in {CITY}, and the website showing up for your business actually belongs to a completely different company — not you. Anyone who Googles you right now gets sent somewhere else entirely.
+
+For a business that's been part of this community for as long as {BIZ} has, that's a real problem — and it's probably been happening without you knowing.
+
+We'd fix this and build on it:
+→ A proper website that actually represents {BIZ}
+→ Google Ads so customers searching for {CATEGORY} in {CITY} find you at the top
+→ Local SEO that gets you correctly ranked in Google Maps
+
+I'd love to get on a quick 15-minute call to show you what we'd do. No cost to talk.
+
+— {ME}
+{COMPANY} | {EMAIL} | {PHONE}`,note:'Lead with this one. Wrong website is instant urgency — they didn\'t know, and now they need to act.'}
+  },
+  voicemail:{
+    standard:{title:'Standard Voicemail',body:`Hey [Name], this is {ME} calling from {COMPANY}. I was doing some research on local businesses in {CITY} and came across {BIZ} — I noticed something about your online presence that I thought you'd want to know about. It'll only take a couple minutes to explain.
+
+Give me a call back at {PHONE} — that's {PHONE}. Thanks.`,note:'Under 25 seconds. Don\'t say what you found. Curiosity gaps get callbacks. Say number twice.'},
+    urgent:{title:'Urgent Voicemail — Broken Site',body:`Hey, this is {ME} from {COMPANY}. I was searching for {BIZ} online and found something that's actively sending your customers to the wrong business — a completely different company. Wanted to let you know about it and show you how to fix it quickly. Call me back at {PHONE}. Again — {PHONE}. Thanks.`,note:'Specific urgency language gets higher callback rates.'}
+  },
+  objections:[
+    {q:'I don\'t need a website — word of mouth works fine',a:`That's great to hear — it means you've built something real. Here's the thing: word of mouth now starts online. When someone hears about you from a friend, the first thing they do is search your name to confirm you're still open and see what you do. If they can't find you, some of them don't show up. A website just makes sure the reputation you've already built actually converts into customers walking through the door.`},
+    {q:'I already have a Facebook page',a:`Facebook is great for the people who already follow you. But when someone Googles "{CATEGORY} near me," Facebook pages almost never show up in those results. A website is what Google actually ranks — it's a completely different audience. People actively searching for what you do right now.`},
+    {q:'I tried Google Ads before and it didn\'t work',a:`I hear that a lot — and honestly, most of the time it's because the campaign wasn't set up correctly. Google Ads done wrong burns money fast. Done right, it's the most targeted advertising that exists. We manage everything — targeting, budget, ad copy, and the page the ad sends people to. What did the setup look like when you tried it before?`},
+    {q:'What does this cost?',a:`I want to be straight with you, not give you a vague answer. Our full package — website, Google Ads management, and local SEO — is $2,400 to set up, plus $800 a month after that. Ad spend is separate and you control it — we recommend starting at $300–$500 a month. Most clients see a return within 30–60 days. Can I show you what that would look like specifically for {BIZ}?`},
+    {q:'I\'m too busy to deal with this',a:`That's exactly why we handle everything. You don't build it, you don't manage it — you just approve it. We do one call to get the info we need, build it, show you, done. Most owners spend less than two hours total from kickoff to going live. Is there a better time in the next couple weeks when things slow down a bit?`},
+    {q:'I need to think about it',a:`Of course — totally fair. Can I ask what the main thing you're weighing? Is it budget, timing, or just not sure it'll work for your type of business? I want to make sure whatever I send you actually answers the right question. And I'll follow up in a week — does [Day] work to reconnect for just 10 minutes?`},
+    {q:'Can I just do the website for now?',a:`Absolutely — we can start there. I'd just want you to know: a website without traffic is like opening a store with no sign out front. The SEO and ads are what drive people to it. But if starting with the site makes sense right now, we build it ready to plug ads and SEO in the moment you're ready — no starting over, no additional cost.`},
+    {q:'I need to talk to my partner/wife first',a:`That makes complete sense — I'd want to make that decision together too. Can I send you something simple that explains what we do and the pricing so you have something concrete to review together? What's the best email? And when should I follow back up?`}
+  ]
+};
+
+const STAGES_DEF = [
+  {id:'research',label:'Research Done',options:[{v:'done',l:'✓ Done',t:'success'}],note:false},
+  {id:'first_call',label:'First Call Attempt',options:[{v:'no_answer',l:'No Answer',t:'fail'},{v:'voicemail',l:'Left Voicemail',t:'neutral'},{v:'not_interested',l:'Not Interested',t:'fail'},{v:'interested',l:'Interested',t:'success'},{v:'call_scheduled',l:'Call Scheduled',t:'success'}],note:true},
+  {id:'email_sent',label:'Email Sent',options:[{v:'sent',l:'✓ Sent',t:'info'},{v:'no_email',l:'No Email Found',t:'fail'}],note:false},
+  {id:'discovery_call',label:'Discovery Call',options:[{v:'scheduled',l:'Scheduled',t:'info'},{v:'completed',l:'✓ Completed',t:'success'},{v:'cancelled',l:'Cancelled',t:'fail'},{v:'skipped',l:'Skip',t:'neutral'}],note:true},
+  {id:'proposal_sent',label:'Proposal Sent',options:[{v:'sent',l:'✓ Proposal Sent',t:'success'},{v:'not_ready',l:'Not Ready Yet',t:'neutral'}],note:false},
+  {id:'follow_up',label:'Follow-Up',options:[{v:'attempted',l:'Attempted',t:'neutral'},{v:'responded',l:'Responded',t:'success'},{v:'ghosted',l:'Ghosted',t:'fail'}],note:true},
+  {id:'decision',label:'Final Decision',options:[{v:'won',l:'✅ Won',t:'success'},{v:'lost_price',l:'❌ Lost — Price',t:'fail'},{v:'lost_timing',l:'❌ Lost — Timing',t:'fail'},{v:'lost_competitor',l:'❌ Lost — Competitor',t:'fail'},{v:'nurture',l:'🔁 Nurture Later',t:'neutral'}],note:true}
+];
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let state = {
+  leads: [],
+  selectedLead: null,
+  workingLead: null,
+  currentView: 'leads',
+  filters: {},
+  activity: {}, // leadId -> {stages:{stageId:{value,note,timestamp}}, history:[]}
+  settings: {name:'Kelvin Osazee',email:'kelvin@zagaprime.com',phone:'',company:'ZagaPrime | Apex Builders'}
+};
+
+// ══════════════════════════════════════════════════════
+// STORAGE
+// ══════════════════════════════════════════════════════
+function saveToLS(){
+  try{
+    localStorage.setItem('zp_leads',JSON.stringify(state.leads));
+    localStorage.setItem('zp_activity',JSON.stringify(state.activity));
+    localStorage.setItem('zp_settings',JSON.stringify(state.settings));
+  }catch(e){console.warn('Storage error',e);}
+}
+function loadFromLS(){
+  try{
+    const l=localStorage.getItem('zp_leads');
+    const a=localStorage.getItem('zp_activity');
+    const s=localStorage.getItem('zp_settings');
+    if(l) state.leads=JSON.parse(l);
+    else state.leads=[...INITIAL_LEADS];
+    if(a) state.activity=JSON.parse(a);
+    if(s) state.settings=JSON.parse(s);
+  }catch(e){state.leads=[...INITIAL_LEADS];}
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER LEADS
+// ══════════════════════════════════════════════════════
+function getFilteredLeads(){
+  const s=document.getElementById('f-search').value.toLowerCase();
+  const st=document.getElementById('f-state').value;
+  const co=document.getElementById('f-county').value;
+  const ci=document.getElementById('f-city').value;
+  const ca=document.getElementById('f-category').value;
+  const ti=document.getElementById('f-tier').value;
+  const ws=document.getElementById('f-web').value;
+  return state.leads.filter(l=>{
+    if(s&&!(l.name+l.category+l.city+l.pitchAngle+l.notes+'').toLowerCase().includes(s))return false;
+    if(st&&l.state!==st)return false;
+    if(co&&l.county!==co)return false;
+    if(ci&&l.city!==ci)return false;
+    if(ca&&l.category!==ca)return false;
+    if(ti&&String(l.tier)!==ti)return false;
+    if(ws&&l.websiteStatus!==ws)return false;
+    return true;
+  });
+}
+
+function renderLeads(){
+  const leads=getFilteredLeads();
+  document.getElementById('filter-count').textContent=`${leads.length} lead${leads.length!==1?'s':''}`;
+  document.getElementById('nav-leads-count').textContent=leads.length;
+  const grid=document.getElementById('leads-grid');
+  if(!leads.length){grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-text">No leads match your filters</div></div>`;return;}
+  grid.innerHTML=leads.map(l=>{
+    const act=state.activity[l.id]||{};
+    const stages=act.stages||{};
+    const stagesDots=STAGES_DEF.map(s=>{
+      const sv=stages[s.id];
+      let cls='stage-dot';
+      if(sv){const opt=s.options.find(o=>o.v===sv.value);if(opt){if(opt.t==='success')cls+=' done';else if(opt.t==='fail')cls+=' fail';else cls+=' active-s';}}
+      return `<div class="${cls}" title="${s.label}"></div>`;
+    }).join('');
+    const worked=Object.keys(stages).length>0;
+    const wsMap={none:'b-red No Website',broken:'b-red Broken Site',outdated:'b-amber Outdated',has_site:'b-green Has Site'};
+    const wsParts=(wsMap[l.websiteStatus]||'b-gray Unknown').split(' ');
+    const wsClass=wsParts[0];const wsLabel=wsParts.slice(1).join(' ');
+    const tierColors=['','b-red','b-amber','b-blue'];
+    const tierLabels=['','T1 Hot','T2 Warm','T3 Long'];
+    return `<div class="lead-card t${l.tier}${state.selectedLead===l.id?' selected':''}" onclick="selectLead('${l.id}')">
+      <div class="card-priority">${l.priority}</div>
+      <div class="card-top">
+        <div>
+          <div class="card-name">${l.name}</div>
+          ${l.owner?`<div class="card-owner">👤 ${l.owner}</div>`:''}
+        </div>
+      </div>
+      <div class="badges">
+        <span class="badge ${wsClass}">${wsLabel}</span>
+        <span class="badge ${tierColors[l.tier]}">${tierLabels[l.tier]}</span>
+        ${worked?'<span class="badge b-cyan">Working</span>':''}
+      </div>
+      <div class="card-cat">${l.category} · ${l.city}, ${l.state}</div>
+      ${l.phone?`<div class="card-phone">${l.phone}</div>`:'<div class="card-phone" style="color:var(--dim)">No phone listed</div>'}
+      <div class="card-pitch">${l.pitchAngle}</div>
+      <div class="card-stages">${stagesDots}</div>
+    </div>`;
+  }).join('');
+  updateStats();
+}
+
+function updateStats(){
+  document.getElementById('stat-total').textContent=state.leads.length;
+  document.getElementById('stat-hot').textContent=state.leads.filter(l=>l.tier===1).length;
+  const worked=Object.keys(state.activity).filter(id=>Object.keys(state.activity[id].stages||{}).length>0);
+  document.getElementById('stat-worked').textContent=worked.length;
+  const won=Object.values(state.activity).filter(a=>a.stages&&a.stages.decision&&a.stages.decision.value==='won');
+  document.getElementById('stat-won').textContent=won.length;
+}
+
+// ══════════════════════════════════════════════════════
+// LEAD DETAIL PANEL
+// ══════════════════════════════════════════════════════
+function selectLead(id){
+  state.selectedLead=id;
+  const l=state.leads.find(x=>x.id===id);
+  if(!l)return;
+  document.querySelectorAll('.lead-card').forEach(c=>c.classList.remove('selected'));
+  const cards=document.querySelectorAll('.lead-card');
+  cards.forEach(c=>{if(c.querySelector('.card-name').textContent===l.name)c.classList.add('selected');});
+  const panel=document.getElementById('lead-panel');
+  panel.classList.add('open');
+  document.getElementById('panel-biz-name').textContent=l.name;
+  document.getElementById('panel-biz-cat').textContent=`${l.category} · ${l.city}, ${l.state}`;
+  const act=state.activity[l.id]||{};
+  const stages=act.stages||{};
+  const wsMap={none:'<span class="badge b-red">No Website</span>',broken:'<span class="badge b-red">Broken / Wrong Site</span>',outdated:'<span class="badge b-amber">Outdated</span>',has_site:'<span class="badge b-green">Has Site</span>'};
+  const tierMap={1:'<span class="badge b-red">🔴 Tier 1 — Hot</span>',2:'<span class="badge b-amber">🟡 Tier 2 — Warm</span>',3:'<span class="badge b-blue">🔵 Tier 3 — Long</span>'};
+  // Stage summary
+  const stageIcons=['🔬','📞','✉️','🤝','📄','🔁','🏁'];
+  const stageSummary=STAGES_DEF.map((s,i)=>{
+    const sv=stages[s.id];
+    let icon='⬜';let statusLabel='—';
+    if(sv){const opt=s.options.find(o=>o.v===sv.value);if(opt){icon=opt.t==='success'?'✅':opt.t==='fail'?'❌':'🟡';statusLabel=opt.l;}}
+    return `<div class="ss-item"><div class="ss-icon">${icon}</div><div class="ss-lbl">${s.label.substring(0,10)}</div></div>`;
+  }).join('');
+  document.getElementById('panel-body').innerHTML=`
+    <div class="info-section">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">${wsMap[l.websiteStatus]||''}${tierMap[l.tier]||''}<span class="badge b-gray">Priority #${l.priority}</span></div>
+      ${stageIcons.length?`<div class="stage-summary">${stageSummary}</div>`:''}
+    </div>
+    <div class="pitch-box"><div class="pitch-label">💡 Pitch Angle</div>${l.pitchAngle}</div>
+    <div class="info-section">
+      <div class="info-label">Contact Info</div>
+      ${infoRow('Name',l.name)}
+      ${l.owner?infoRow('Owner',l.owner):''}
+      ${infoRow('Phone',l.phone?`<a href="tel:${l.phone}">${l.phone}</a>`:'<span style="color:var(--dim)">Not listed</span>')}
+      ${l.email?infoRow('Email',`<a href="mailto:${l.email}">${l.email}</a>`):''}
+    </div>
+    <div class="info-section">
+      <div class="info-label">Location</div>
+      ${infoRow('Address',l.address)}
+      ${infoRow('City',l.city)}
+      ${infoRow('County',l.county)}
+      ${infoRow('State',l.state+' '+l.zip)}
+    </div>
+    <div class="info-section">
+      <div class="info-label">Online Presence</div>
+      ${infoRow('Website',l.websiteStatus==='none'?'<span class="badge b-red">No Website</span>':l.websiteStatus==='broken'?'<span class="badge b-red">Broken/Wrong Site</span>':l.websiteStatus==='outdated'?'<span class="badge b-amber">Outdated Site</span>':'<span class="badge b-green">Has Site</span>')}
+      ${infoRow('Current Online',l.onlinePresence||'Unknown')}
+      ${l.yearsInBusiness?infoRow('Est.',l.yearsInBusiness+' years in business'):''}
+    </div>
+    ${l.notes?`<div class="notes-box"><div class="notes-label">📝 Research Notes</div>${l.notes}</div>`:''}
+    ${act.stages&&Object.keys(act.stages).length?renderStageSummaryPanel(act.stages):''}
+  `;
+}
+
+function infoRow(k,v){return`<div class="info-row"><div class="info-key">${k}</div><div class="info-val">${v||'—'}</div></div>`;}
+
+function renderStageSummaryPanel(stages){
+  const rows=STAGES_DEF.filter(s=>stages[s.id]).map(s=>{
+    const sv=stages[s.id];
+    const opt=s.options.find(o=>o.v===sv.value);
+    const icon=opt?opt.t==='success'?'✅':opt.t==='fail'?'❌':'🟡':'○';
+    const ts=sv.timestamp?new Date(sv.timestamp).toLocaleDateString():'';
+    return`<div class="info-row"><div class="info-key">${s.label}</div><div class="info-val">${icon} ${opt?opt.l:'—'}${sv.note?` · <em style="color:var(--muted)">${sv.note}</em>`:''}${ts?` <span style="color:var(--dim);font-size:11px;">${ts}</span>`:''}</div></div>`;
+  }).join('');
+  return`<div class="info-section"><div class="info-label">Stage History</div>${rows}</div>`;
+}
+
+function closePanel(){
+  document.getElementById('lead-panel').classList.remove('open');
+  document.querySelectorAll('.lead-card').forEach(c=>c.classList.remove('selected'));
+  state.selectedLead=null;
+}
+
+// ══════════════════════════════════════════════════════
+// SALES MODE
+// ══════════════════════════════════════════════════════
+function openSalesMode(){
+  if(!state.selectedLead)return;
+  const l=state.leads.find(x=>x.id===state.selectedLead);
+  if(!l)return;
+  state.workingLead=l.id;
+  if(!state.activity[l.id])state.activity[l.id]={stages:{},history:[]};
+  document.getElementById('sm-biz-name').textContent=l.name;
+  document.getElementById('sm-biz-meta').textContent=`${l.category} · ${l.city}, ${l.state}`;
+  const wsMap={none:'<span class="badge b-red">No Website</span>',broken:'<span class="badge b-red">Broken Site</span>',outdated:'<span class="badge b-amber">Outdated</span>'};
+  const tierMap={1:'<span class="badge b-red">Tier 1</span>',2:'<span class="badge b-amber">Tier 2</span>',3:'<span class="badge b-blue">Tier 3</span>'};
+  document.getElementById('sm-badges').innerHTML=(wsMap[l.websiteStatus]||'')+(tierMap[l.tier]||'');
+  document.getElementById('sales-mode').classList.add('open');
+  renderSalesScripts('opener');
+  renderStageChecklist();
+  updateSMProgress();
+}
+
+function closeSalesMode(){
+  document.getElementById('sales-mode').classList.remove('open');
+  state.workingLead=null;
+}
+
+function fillScript(text){
+  const l=state.workingLead?state.leads.find(x=>x.id===state.workingLead):{};
+  const me=state.settings.name||'Kelvin';
+  const company=state.settings.company||'ZagaPrime';
+  const email=state.settings.email||'kelvin@zagaprime.com';
+  const phone=state.settings.phone||'[PHONE]';
+  return text
+    .replace(/{BIZ}/g,l.name||'[Business]')
+    .replace(/{CITY}/g,l.city||'[City]')
+    .replace(/{COUNTY}/g,l.county||'[County]')
+    .replace(/{STATE}/g,l.state||'NJ')
+    .replace(/{CATEGORY}/g,l.category||'[Category]')
+    .replace(/{PITCH_ANGLE}/g,l.pitchAngle||'')
+    .replace(/{ME}/g,me)
+    .replace(/{COMPANY}/g,company)
+    .replace(/{EMAIL}/g,email)
+    .replace(/{PHONE}/g,phone)
+    .replace(/\[owner\]/g,l.owner||'the owner');
+}
+
+function highlightBiz(text){
+  const l=state.workingLead?state.leads.find(x=>x.id===state.workingLead):{};
+  if(!l||!l.name)return text;
+  return text.replace(new RegExp(escapeRE(l.name),'g'),`<span class="sb-biz">${l.name}</span>`);
+}
+function escapeRE(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+
+function scriptBlock(title,type,body,note,isBroken){
+  const filled=fillScript(body);
+  const highlighted=highlightBiz(filled);
+  return`<div class="script-block${isBroken?' highlight':''}">
+    <button class="copy-btn" onclick="copyScript(this)">Copy</button>
+    <div class="sb-type">${type}</div>
+    <div class="sb-title">${title}</div>
+    <div class="sb-body">${highlighted}</div>
+    ${note?`<div class="sb-note">💡 ${note}</div>`:''}
+  </div>`;
+}
+
+function renderSalesScripts(tab){
+  const l=state.workingLead?state.leads.find(x=>x.id===state.workingLead):null;
+  const ws=l?l.websiteStatus:'none';
+  let html='';
+  if(tab==='opener'){
+    html=scriptBlock(SCRIPTS.opener.standard.title,'📞 Cold Call Opener',SCRIPTS.opener.standard.body,SCRIPTS.opener.standard.note,false);
+    if(ws==='broken')html=scriptBlock('URGENT Opener — Broken Website','📞 Urgent Opener',`Hey, is this the owner of {BIZ}?\n\nHey — my name is {ME} from {COMPANY}. I'm calling because I was doing research on local {CITY} businesses and I came across something about {BIZ} that you probably don't know about — and it's actively hurting your business. Got 60 seconds?`,'This opener creates instant intrigue — they will always say yes.',true)+html;
+  }else if(tab==='hook'){
+    const hookKey=ws==='broken'?'broken':ws==='outdated'?'outdated':l&&l.hookType==='competitor'?'competitor':ws==='weak_seo'?'weak_seo':'none';
+    const h=SCRIPTS.hooks[hookKey]||SCRIPTS.hooks.none;
+    html=scriptBlock(h.title,'🎯 Hook',h.body,h.note,ws==='broken'||ws==='outdated');
+    if(hookKey!=='none')html+=scriptBlock(SCRIPTS.hooks.none.title,'🎯 Alternative Hook',SCRIPTS.hooks.none.body,SCRIPTS.hooks.none.note,false);
+  }else if(tab==='offer'){
+    html=scriptBlock(SCRIPTS.offer.full.title,'📦 The Offer',SCRIPTS.offer.full.body,SCRIPTS.offer.full.note,false);
+  }else if(tab==='email'){
+    const useUrgent=ws==='broken';
+    if(useUrgent)html=scriptBlock(SCRIPTS.email.broken.title,'✉️ PRIORITY EMAIL — send first',SCRIPTS.email.broken.body.replace('Subject: {BIZ}','').replace(/{BIZ} — /,''),null,true);
+    html+=scriptBlock(SCRIPTS.email.standard.title,'✉️ Standard Follow-up Email',SCRIPTS.email.standard.body,SCRIPTS.email.standard.note,false);
+  }else if(tab==='voicemail'){
+    const useUrgent=ws==='broken';
+    if(useUrgent)html=scriptBlock(SCRIPTS.voicemail.urgent.title,'🎤 Urgent Voicemail',SCRIPTS.voicemail.urgent.body,SCRIPTS.voicemail.urgent.note,true);
+    html+=scriptBlock(SCRIPTS.voicemail.standard.title,'🎤 Standard Voicemail',SCRIPTS.voicemail.standard.body,SCRIPTS.voicemail.standard.note,false);
+  }else if(tab==='objections'){
+    html=SCRIPTS.objections.map(o=>scriptBlock(o.q,'🛡️ Objection Handler',o.a,null,false)).join('');
+  }
+  document.getElementById('script-content').innerHTML=html||'<div class="empty"><div class="empty-text">No scripts for this tab</div></div>';
+}
+
+function switchScriptTab(tab,el){
+  document.querySelectorAll('.st').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderSalesScripts(tab);
+}
+
+function copyScript(btn){
+  const box=btn.closest('.script-block').querySelector('.sb-body');
+  const text=box.innerText;
+  navigator.clipboard.writeText(text).then(()=>{btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',1500);});
+}
+
+// ══════════════════════════════════════════════════════
+// STAGE CHECKLIST
+// ══════════════════════════════════════════════════════
+function renderStageChecklist(){
+  if(!state.workingLead)return;
+  const act=state.activity[state.workingLead];
+  const stages=act.stages||{};
+  const html=STAGES_DEF.map((s,i)=>{
+    const current=stages[s.id];
+    const isDoneOk=current&&s.options.find(o=>o.v===current.value&&o.t==='success');
+    const isDoneFail=current&&s.options.find(o=>o.v===current.value&&o.t==='fail');
+    const cls=isDoneOk?'done-ok':isDoneFail?'done-fail':'';
+    const statusLabel=current?s.options.find(o=>o.v===current.value)?.l:'Pending';
+    const statusCls=current?(isDoneOk?'success':isDoneFail?'fail':'skip'):'pending';
+    const opts=s.options.map(o=>{
+      const selCls=current&&current.value===o.v?`selected ${o.t}`:'';
+      return`<button class="sc-opt ${selCls}" onclick="selectStageOpt('${s.id}','${o.v}','${o.t}')">${o.l}</button>`;
+    }).join('');
+    return`<div class="stage-card ${cls}" id="sc-${s.id}">
+      <div class="sc-header">
+        <div class="sc-num">${i+1}</div>
+        <div class="sc-title">${s.label}</div>
+        <div class="sc-status ${statusCls}">${statusLabel||'Pending'}</div>
+      </div>
+      <div class="sc-options">${opts}</div>
+      ${s.note?`<div class="sc-note"><input type="text" id="sc-note-${s.id}" placeholder="Add a note..." value="${(current&&current.note)||''}" onchange="updateStageNote('${s.id}',this.value)"></div>`:''}
+    </div>`;
+  }).join('');
+  document.getElementById('stage-checklist').innerHTML=html;
+  updateSMProgress();
+}
+
+function selectStageOpt(stageId,value,type){
+  if(!state.workingLead)return;
+  if(!state.activity[state.workingLead])state.activity[state.workingLead]={stages:{},history:[]};
+  const existing=state.activity[state.workingLead].stages[stageId];
+  const noteEl=document.getElementById('sc-note-'+stageId);
+  const note=noteEl?noteEl.value:'';
+  state.activity[state.workingLead].stages[stageId]={value,note,timestamp:new Date().toISOString()};
+  state.activity[state.workingLead].history=state.activity[state.workingLead].history||[];
+  state.activity[state.workingLead].history.push({stage:stageId,value,timestamp:new Date().toISOString()});
+  renderStageChecklist();
+}
+
+function updateStageNote(stageId,note){
+  if(!state.workingLead)return;
+  if(state.activity[state.workingLead]&&state.activity[state.workingLead].stages[stageId]){
+    state.activity[state.workingLead].stages[stageId].note=note;
+  }
+}
+
+function updateSMProgress(){
+  if(!state.workingLead)return;
+  const act=state.activity[state.workingLead]||{};
+  const done=Object.keys(act.stages||{}).length;
+  const total=STAGES_DEF.length;
+  document.getElementById('sm-progress-text').textContent=`${done}/${total} stages logged`;
+}
+
+function saveSalesData(){
+  if(!state.workingLead)return;
+  // Sync any open note fields
+  STAGES_DEF.forEach(s=>{
+    const el=document.getElementById('sc-note-'+s.id);
+    if(el&&state.activity[state.workingLead]&&state.activity[state.workingLead].stages[s.id]){
+      state.activity[state.workingLead].stages[s.id].note=el.value;
+    }
+  });
+  state.activity[state.workingLead].lastSaved=new Date().toISOString();
+  saveToLS();
+  showToast('Progress saved!');
+  document.getElementById('save-time-label').textContent='Saved '+new Date().toLocaleTimeString();
+  renderLeads();
+  closeSalesMode();
+  // Re-select lead to update panel
+  if(state.selectedLead)selectLead(state.selectedLead);
+}
+
+// ══════════════════════════════════════════════════════
+// ANALYTICS
+// ══════════════════════════════════════════════════════
+function renderAnalytics(){
+  const acts=state.activity;
+  const workedIds=Object.keys(acts).filter(id=>Object.keys(acts[id].stages||{}).length>0);
+  const total=state.leads.length;
+  const worked=workedIds.length;
+  const contacted=workedIds.filter(id=>acts[id].stages.first_call).length;
+  const discovery=workedIds.filter(id=>acts[id].stages.discovery_call&&acts[id].stages.discovery_call.value==='completed').length;
+  const proposals=workedIds.filter(id=>acts[id].stages.proposal_sent&&acts[id].stages.proposal_sent.value==='sent').length;
+  const won=workedIds.filter(id=>acts[id].stages.decision&&acts[id].stages.decision.value==='won').length;
+  const contactRate=worked?Math.round(contacted/worked*100):0;
+  const closeRate=proposals?Math.round(won/proposals*100):0;
+
+  document.getElementById('analytics-metrics').innerHTML=[
+    {n:total,l:'Total Leads',s:'in pipeline',c:'var(--text)'},
+    {n:worked,l:'Leads Worked',s:'outreach started',c:'var(--accent)'},
+    {n:`${contactRate}%`,l:'Contact Rate',s:`${contacted}/${worked} connected`,c:'var(--cyan)'},
+    {n:proposals,l:'Proposals Sent',s:'ready to close',c:'var(--amber)'},
+    {n:won,l:'Closed Won',s:closeRate+'% close rate',c:'var(--green)'},
+    {n:workedIds.filter(id=>acts[id].stages.decision&&acts[id].stages.decision.value.startsWith('lost')).length,l:'Closed Lost',s:'learn from these',c:'var(--red)'}
+  ].map(m=>`<div class="metric-card"><div class="mc-num" style="color:${m.c}">${m.n}</div><div class="mc-lbl">${m.l}</div><div class="mc-sub">${m.s}</div></div>`).join('');
+
+  // Funnel
+  const funnelData=[
+    {l:'Total Leads',n:total,c:'#4f7ef8'},
+    {l:'Outreach Started',n:worked,c:'#06b6d4'},
+    {l:'First Contact Made',n:contacted,c:'#a78bfa'},
+    {l:'Discovery Call Done',n:discovery,c:'#f59e0b'},
+    {l:'Proposal Sent',n:proposals,c:'#10b981'},
+    {l:'Closed Won',n:won,c:'#22c55e'}
+  ];
+  document.getElementById('funnel-chart').innerHTML=funnelData.map(f=>`
+    <div class="funnel-bar">
+      <div class="fb-label">${f.l}</div>
+      <div class="fb-track"><div class="fb-fill" style="width:${total?Math.round(f.n/total*100):0}%;background:${f.c}">${f.n>0?Math.round(f.n/total*100)+'%':''}</div></div>
+      <div class="fb-count">${f.n}</div>
+    </div>`).join('');
+
+  // Category breakdown
+  const catCounts={};
+  state.leads.forEach(l=>{catCounts[l.category]=(catCounts[l.category]||0)+1;});
+  const maxCat=Math.max(...Object.values(catCounts));
+  document.getElementById('cat-chart').innerHTML=Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).map(([cat,n])=>`
+    <div class="cat-row">
+      <div class="cat-name">${cat}</div>
+      <div class="cat-bar"><div class="cat-fill" style="width:${Math.round(n/maxCat*100)}%"></div></div>
+      <div class="cat-num">${n}</div>
+    </div>`).join('');
+
+  // Stage performance
+  const stageCounts={};
+  STAGES_DEF.forEach(s=>{
+    let success=0,fail=0,total=0;
+    workedIds.forEach(id=>{if(acts[id].stages[s.id]){total++;const opt=s.options.find(o=>o.v===acts[id].stages[s.id].value);if(opt&&opt.t==='success')success++;if(opt&&opt.t==='fail')fail++;}});
+    stageCounts[s.label]={success,fail,total};
+  });
+  document.getElementById('stage-perf').innerHTML=Object.entries(stageCounts).map(([stage,d])=>`
+    <div class="funnel-bar">
+      <div class="fb-label" style="font-size:11px">${stage}</div>
+      <div class="fb-track" style="height:18px">
+        ${d.success>0?`<div class="fb-fill" style="width:${d.total?Math.round(d.success/d.total*100):0}%;background:var(--green);display:inline-flex;">${d.success}</div>`:''}
+        ${d.fail>0?`<div class="fb-fill" style="width:${d.total?Math.round(d.fail/d.total*100):0}%;background:var(--red);display:inline-flex;">${d.fail}</div>`:''}
+      </div>
+      <div class="fb-count">${d.total}</div>
+    </div>`).join('')||'<div class="empty"><div class="empty-text">No stage data yet. Start working leads to see performance.</div></div>';
+
+  // Activity feed
+  const allHistory=[];
+  workedIds.forEach(id=>{
+    const l=state.leads.find(x=>x.id===id);
+    const act=acts[id];
+    if(act.history)act.history.forEach(h=>{allHistory.push({...h,biz:l?l.name:'Unknown',leadId:id});});
+    // Also add saved timestamps
+    if(act.lastSaved)allHistory.push({timestamp:act.lastSaved,stage:'saved',value:'saved',biz:l?l.name:'Unknown'});
+  });
+  allHistory.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+  document.getElementById('activity-feed').innerHTML=allHistory.slice(0,20).map(h=>{
+    const stageInfo=STAGES_DEF.find(s=>s.id===h.stage);
+    const optInfo=stageInfo?stageInfo.options.find(o=>o.v===h.value):null;
+    const dotCls=optInfo?(optInfo.t==='success'?'green':optInfo.t==='fail'?'red':'amber'):'blue';
+    const action=h.stage==='saved'?'progress saved':stageInfo?`${stageInfo.label}: ${optInfo?optInfo.l:h.value}`:`${h.stage}: ${h.value}`;
+    const ts=new Date(h.timestamp).toLocaleDateString();
+    return`<div class="af-item"><div class="af-dot ${dotCls}"></div><div><div class="af-biz">${h.biz}</div><div class="af-action">${action}</div></div><div class="af-time">${ts}</div></div>`;
+  }).join('')||'<div class="empty"><div class="empty-text">No activity yet</div></div>';
+}
+
+// ══════════════════════════════════════════════════════
+// FILTERS
+// ══════════════════════════════════════════════════════
+function populateFilters(){
+  const states=[...new Set(state.leads.map(l=>l.state).filter(Boolean))].sort();
+  const counties=[...new Set(state.leads.map(l=>l.county).filter(Boolean))].sort();
+  const cities=[...new Set(state.leads.map(l=>l.city).filter(Boolean))].sort();
+  const cats=[...new Set(state.leads.map(l=>l.category).filter(Boolean))].sort();
+  const sel=(id,vals)=>{const el=document.getElementById(id);const cur=el.value;el.innerHTML=`<option value="">${el.options[0].text}</option>`+vals.map(v=>`<option value="${v}">${v}</option>`).join('');el.value=cur;};
+  sel('f-state',states);sel('f-county',counties);sel('f-city',cities);sel('f-category',cats);
+}
+function applyFilters(){renderLeads();}
+function clearFilters(){
+  ['f-search','f-state','f-county','f-city','f-category','f-tier','f-web'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  renderLeads();
+}
+
+// ══════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════
+function showView(view,navEl){
+  state.currentView=view;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(navEl)navEl.classList.add('active');
+  document.querySelectorAll('.view, .view-split').forEach(v=>{v.classList.remove('active');v.style.display='none';});
+  if(view==='leads'){
+    const vs=document.getElementById('view-leads');vs.classList.add('active');vs.style.display='flex';
+  }else{
+    const vEl=document.getElementById('view-'+view);
+    if(vEl){vEl.classList.add('active');vEl.style.display='block';}
+  }
+  if(view==='analytics')renderAnalytics();
+  if(view==='settings')loadSettingsUI();
+  updateStorageInfo();
+}
+
+function openFindLeads(){showView('find',document.querySelector('[data-view=find]'));}
+
+// ══════════════════════════════════════════════════════
+// ADD / IMPORT LEADS
+// ══════════════════════════════════════════════════════
+function addManualLead(){
+  const name=document.getElementById('add-name').value.trim();
+  const cat=document.getElementById('add-cat').value.trim();
+  const city=document.getElementById('add-city').value.trim();
+  if(!name||!cat||!city){showToast('Name, Category and City are required');return;}
+  const id='L'+String(Date.now()).slice(-6);
+  const newLead={id,name,owner:document.getElementById('add-owner').value.trim()||null,category:cat,address:'',city,county:document.getElementById('add-county').value.trim()||'',state:document.getElementById('add-state').value.trim()||'NJ',zip:'',phone:document.getElementById('add-phone').value.trim()||null,email:null,websiteStatus:document.getElementById('add-wstatus').value,onlinePresence:'',pitchAngle:document.getElementById('add-pitch').value.trim()||'',hookType:'none',tier:parseInt(document.getElementById('add-tier').value)||1,priority:state.leads.length+1,yearsInBusiness:null,googleRating:null,notes:document.getElementById('add-notes').value.trim()};
+  state.leads.push(newLead);
+  saveToLS();
+  populateFilters();
+  renderLeads();
+  showToast(`${name} added!`);
+  ['add-name','add-owner','add-cat','add-phone','add-city','add-county','add-pitch','add-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+}
+
+function searchArea(){
+  const state2=document.getElementById('new-state').value;
+  const county=document.getElementById('new-county').value.trim();
+  const city=document.getElementById('new-city').value.trim();
+  const cat=document.getElementById('new-cat-search').value;
+  ['f-state','f-county','f-city','f-category'].forEach((fid,i)=>{
+    const val=[state2,county,city,cat][i];
+    const el=document.getElementById(fid);
+    if(el&&val)el.value=val;
+  });
+  showView('leads',document.querySelector('[data-view=leads]'));
+}
+
+function importCSV(){
+  const csv=document.getElementById('csv-import').value.trim();
+  if(!csv){showToast('Paste CSV content first');return;}
+  const lines=csv.split('\n').filter(l=>l.trim());
+  if(lines.length<2){showToast('Need at least a header row + 1 data row');return;}
+  const headers=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/\s+/g,'_'));
+  let added=0;
+  for(let i=1;i<lines.length;i++){
+    const vals=lines[i].split(',').map(v=>v.trim().replace(/^"|"$/g,''));
+    const row={};headers.forEach((h,j)=>row[h]=vals[j]||'');
+    if(!row.business_name)continue;
+    const id='IMP'+String(Date.now()).slice(-6)+i;
+    state.leads.push({id,name:row.business_name,owner:row.owner_name||null,category:row.category||'Other',address:row.address||'',city:row.city||'',county:row.county||'',state:row.state||'NJ',zip:row.zip||'',phone:row.phone||null,email:row.email||null,websiteStatus:row.website_status||'none',onlinePresence:'',pitchAngle:row.pitch_angle||'',hookType:'none',tier:parseInt(row.tier)||1,priority:state.leads.length,yearsInBusiness:null,googleRating:null,notes:row.notes||''});
+    added++;
+  }
+  saveToLS();populateFilters();renderLeads();
+  showToast(`${added} leads imported!`);
+  document.getElementById('csv-import').value='';
+}
+
+function downloadTemplate(){
+  const header='business_name,owner_name,category,phone,address,city,county,state,zip,website_status,pitch_angle,tier,notes';
+  const ex='Example Shop,John Smith,Auto Repair,(973)555-0100,123 Main St,Newton,Sussex County,NJ,07860,none,No website found,1,Checked Google - no site exists';
+  const blob=new Blob([header+'\n'+ex],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='zagaprime-leads-template.csv';a.click();
+}
+
+// ══════════════════════════════════════════════════════
+// GOOGLE SHEETS
+// ══════════════════════════════════════════════════════
+function connectGoogleSheet(){
+  const url=document.getElementById('gs-url').value.trim();
+  if(!url){showToast('Paste your Google Sheets CSV URL first');return;}
+  // Validate it looks like a Google Sheets pub URL
+  if(!url.includes('docs.google.com')&&!url.includes('spreadsheets')){
+    showToast('URL must be a Google Sheets published link');return;
+  }
+  localStorage.setItem('zp_gs_url',url);
+  fetchGoogleSheet(url);
+}
+
+// Parse CSV text handling quoted fields with commas inside
+function parseCSVText(csv){
+  const lines=[];
+  const rows=csv.split('\n');
+  for(const row of rows){
+    if(!row.trim())continue;
+    const fields=[];let cur='';let inQ=false;
+    for(let i=0;i<row.length;i++){
+      const c=row[i];
+      if(c==='"'){if(inQ&&row[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+      else if(c===','&&!inQ){fields.push(cur.trim());cur='';}
+      else cur+=c;
+    }
+    fields.push(cur.trim());
+    lines.push(fields);
+  }
+  return lines;
+}
+
+async function fetchGoogleSheet(url){
+  const statusEl=document.getElementById('gs-status');
+  const setStatus=(ok,msg)=>{
+    statusEl.innerHTML=`<div class="gs-dot" style="background:${ok?'var(--green)':'var(--red)'}"></div>${msg}`;
+    statusEl.className=ok?'gs-connected':'gs-disconnected';
+  };
+  setStatus(false,'Connecting...');
+
+  // Ensure URL ends with ?output=csv or &output=csv
+  let csvUrl=url;
+  if(!csvUrl.includes('output=csv')){
+    csvUrl+=(csvUrl.includes('?')?'&':'?')+'output=csv';
+  }
+
+  // Try methods in order: direct, then CORS proxies
+  const proxies=[
+    u=>u, // direct
+    u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
+    u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`
+  ];
+
+  let csv=null;
+  let lastError='';
+  for(const proxyFn of proxies){
+    const tryUrl=proxyFn(csvUrl);
+    try{
+      const r=await fetch(tryUrl,{signal:AbortSignal.timeout(8000)});
+      if(!r.ok)throw new Error(`HTTP ${r.status}`);
+      const text=await r.text();
+      // Make sure we got actual CSV (not an HTML error page)
+      if(text.trim().startsWith('<'))throw new Error('Got HTML, not CSV');
+      if(text.length<10)throw new Error('Response too short');
+      csv=text;break;
+    }catch(e){lastError=e.message;}
+  }
+
+  if(!csv){
+    setStatus(false,'Sheets: Error');
+    showGSError(lastError,csvUrl);
+    return;
+  }
+
+  // Parse the CSV
+  const rows=parseCSVText(csv);
+  if(rows.length<2){setStatus(false,'Sheets: Empty sheet');showToast('Sheet appears empty — make sure you have data rows');return;}
+
+  const headers=rows[0].map(h=>h.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''));
+  let added=0,updated=0;
+  for(let i=1;i<rows.length;i++){
+    const vals=rows[i];
+    const row={};headers.forEach((h,j)=>row[h]=vals[j]||'');
+    const bizName=(row.business_name||row.name||'').trim();
+    if(!bizName)continue;
+    // Check if lead already exists (by name)
+    const existing=state.leads.find(l=>l.name.toLowerCase()===bizName.toLowerCase());
+    const leadData={
+      id:existing?existing.id:'GS'+String(Date.now()).slice(-6)+i,
+      name:bizName,
+      owner:(row.owner_name||row.owner||'').trim()||null,
+      category:(row.category||'').trim()||'Other',
+      phone:(row.phone||'').trim()||null,
+      email:(row.email||'').trim()||null,
+      address:(row.address||'').trim()||'',
+      city:(row.city||'').trim()||'',
+      county:(row.county||'').trim()||'',
+      state:(row.state||'NJ').trim(),
+      zip:(row.zip||'').trim()||'',
+      websiteStatus:(row.website_status||row.websitestatus||'none').trim()||'none',
+      onlinePresence:(row.online_presence||row.onlinepresence||'').trim()||'',
+      pitchAngle:(row.pitch_angle||row.pitchangle||row.pitch||'').trim()||'',
+      hookType:(row.hook_type||row.hooktype||'none').trim()||'none',
+      tier:parseInt(row.tier)||1,
+      priority:existing?existing.priority:state.leads.length+i,
+      yearsInBusiness:(row.years_in_business||row.years||'').trim()||null,
+      googleRating:(row.google_rating||'').trim()||null,
+      notes:(row.notes||row.note||'').trim()||''
+    };
+    if(existing){Object.assign(existing,leadData);updated++;}
+    else{state.leads.push(leadData);added++;}
+  }
+
+  saveToLS();
+  populateFilters();
+  renderLeads();
+  setStatus(true,`Sheets: Live (${rows.length-1} rows)`);
+  showToast(`✓ ${added} added, ${updated} updated from Google Sheets!`);
+  // Also show the connection time
+  localStorage.setItem('zp_gs_last_sync',new Date().toLocaleString());
+  updateStorageInfo();
+}
+
+function showGSError(errMsg,url){
+  // Show a helpful modal-style error
+  const msg=`Google Sheets connection failed.\n\nError: ${errMsg}\n\nChecklist:\n1. Open your Google Sheet\n2. File → Share → Publish to web\n3. Select your sheet tab\n4. Format: CSV (not web page)\n5. Click Publish\n6. Copy the link — it should look like:\nhttps://docs.google.com/spreadsheets/d/e/2PACX.../pub?output=csv\n\nYour URL: ${url}`;
+  alert(msg);
+}
+
+let autoSyncInterval=null;
+function autoSyncSheet(){
+  if(autoSyncInterval){clearInterval(autoSyncInterval);autoSyncInterval=null;showToast('Auto-sync stopped');document.getElementById('gs-sync-status').textContent='';return;}
+  const url=document.getElementById('gs-url').value.trim();
+  if(!url){showToast('Paste URL first');return;}
+  connectGoogleSheet();
+  autoSyncInterval=setInterval(()=>{fetchGoogleSheet(url);document.getElementById('gs-sync-status').textContent='Last sync: '+new Date().toLocaleTimeString();},5*60*1000);
+  document.getElementById('gs-sync-status').textContent='Auto-sync active — updates every 5 minutes';
+  showToast('Auto-sync enabled!');
+}
+
+function testGoogleSheet(){
+  const url=document.getElementById('gs-url').value.trim();
+  if(!url){showToast('Paste URL first');return;}
+  // Open both the raw CSV and the sheet view
+  let csvUrl=url;
+  if(!csvUrl.includes('output=csv'))csvUrl+=(csvUrl.includes('?')?'&':'?')+'output=csv';
+  window.open(csvUrl,'_blank');
+  showToast('Opened CSV in new tab — you should see raw comma-separated data');
+}
+
+// ══════════════════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════════════════
+function exportCSV(){
+  const headers=['id','name','owner','category','phone','address','city','county','state','zip','websiteStatus','pitchAngle','tier','priority','notes'];
+  const rows=state.leads.map(l=>headers.map(h=>`"${(l[h]||'').toString().replace(/"/g,'""')}"`).join(','));
+  const csv=headers.join(',')+'\n'+rows.join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='zagaprime-leads-'+new Date().toISOString().split('T')[0]+'.csv';a.click();
+  showToast('Leads exported!');
+}
+
+function exportAnalytics(){
+  const headers=['leadId','businessName','stageId','stageLabel','value','note','timestamp'];
+  const rows=[];
+  Object.entries(state.activity).forEach(([id,act])=>{
+    const l=state.leads.find(x=>x.id===id);
+    Object.entries(act.stages||{}).forEach(([stageId,sv])=>{
+      const stageInfo=STAGES_DEF.find(s=>s.id===stageId);
+      rows.push([id,l?l.name:'',stageId,stageInfo?stageInfo.label:'',sv.value,sv.note||'',sv.timestamp||''].map(v=>`"${v}"`).join(','));
+    });
+  });
+  const csv=headers.join(',')+'\n'+rows.join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='zagaprime-analytics-'+new Date().toISOString().split('T')[0]+'.csv';a.click();
+  showToast('Analytics exported!');
+}
+
+function clearAnalytics(){
+  if(!confirm('Clear all activity data? This cannot be undone.'))return;
+  state.activity={};saveToLS();renderLeads();renderAnalytics();showToast('Activity data cleared');
+}
+
+// ══════════════════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════════════════
+function loadSettingsUI(){
+  const s=state.settings;
+  document.getElementById('set-name').value=s.name||'';
+  document.getElementById('set-email').value=s.email||'';
+  document.getElementById('set-phone').value=s.phone||'';
+  document.getElementById('set-company').value=s.company||'';
+  const gsUrl=localStorage.getItem('zp_gs_url')||'';
+  document.getElementById('gs-url').value=gsUrl;
+  updateStorageInfo();
+}
+function saveSettings(){
+  state.settings={name:document.getElementById('set-name').value,email:document.getElementById('set-email').value,phone:document.getElementById('set-phone').value,company:document.getElementById('set-company').value};
+  saveToLS();
+}
+function updateStorageInfo(){
+  const el=document.getElementById('storage-info');
+  if(!el)return;
+  const leadsSize=JSON.stringify(state.leads).length;
+  const actSize=JSON.stringify(state.activity).length;
+  el.textContent=`Leads: ${state.leads.length} records (${Math.round(leadsSize/1024)}KB) · Activity: ${Object.keys(state.activity).length} logs (${Math.round(actSize/1024)}KB) · Stored locally in your browser`;
+}
+
+// ══════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ══════════════════════════════════════════════════════
+// GOOGLE SHEETS SYNC — PUSH DATA OUT
+// ══════════════════════════════════════════════════════
+
+function saveWebAppUrl() {
+  const url = document.getElementById('gs-webapp-url').value.trim();
+  if (url) localStorage.setItem('zp_webapp_url', url);
+}
+
+function loadWebAppUrl() {
+  const url = localStorage.getItem('zp_webapp_url') || '';
+  const el = document.getElementById('gs-webapp-url');
+  if (el) el.value = url;
+  return url;
+}
+
+function copyAppsScript() {
+  const el = document.getElementById('apps-script-code');
+  if (!el) return;
+  // Decode HTML entities for copying
+  const tmp = document.createElement('textarea');
+  tmp.innerHTML = el.innerText;
+  navigator.clipboard.writeText(el.innerText).then(() => {
+    showToast('Apps Script code copied!');
+  });
+}
+
+async function syncToSheets() {
+  const webAppUrl = localStorage.getItem('zp_webapp_url') || '';
+  const btn = document.getElementById('sync-btn');
+  
+  if (!webAppUrl) {
+    // No web app configured — fall back to CSV download
+    showToast('No web app URL set — downloading CSV instead...');
+    setTimeout(() => {
+      exportFullSyncCSV();
+    }, 500);
+    return;
+  }
+  
+  if (btn) { btn.textContent = '⏳ Syncing...'; btn.disabled = true; }
+  
+  // Build the full sync payload — leads + activity merged
+  const leadsWithStages = state.leads.map(l => {
+    const act = state.activity[l.id] || {};
+    return { ...l, _stages: act.stages || {} };
+  });
+  
+  const payload = {
+    type: 'full_sync',
+    leads: leadsWithStages,
+    activity: state.activity,
+    synced_at: new Date().toISOString()
+  };
+  
+  // Try direct POST, then CORS proxies
+  const proxies = [
+    url => url,
+    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+  ];
+  
+  let success = false;
+  for (const proxyFn of proxies) {
+    try {
+      const r = await fetch(proxyFn(webAppUrl), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(10000)
+      });
+      const result = await r.json();
+      if (result.success) {
+        success = true;
+        const syncTime = new Date().toLocaleString();
+        localStorage.setItem('zp_last_sync', syncTime);
+        document.getElementById('gs-sync-status').textContent = '✅ Synced to Google Sheets at ' + syncTime;
+        if (document.getElementById('gs-status')) {
+          document.getElementById('gs-status').innerHTML = '<div class="gs-dot" style="background:var(--green)"></div>Sheets: Synced ' + new Date().toLocaleTimeString();
+          document.getElementById('gs-status').className = 'gs-connected';
+        }
+        showToast('✅ ' + state.leads.length + ' leads synced to Google Sheets!');
+        break;
+      }
+    } catch(e) { /* try next proxy */ }
+  }
+  
+  if (!success) {
+    // All methods failed — export CSV as fallback
+    showToast('Web app unreachable — downloading CSV backup...');
+    exportFullSyncCSV();
+    document.getElementById('gs-sync-status').textContent = '⚠️ Direct sync failed — CSV downloaded as backup';
+  }
+  
+  if (btn) { btn.textContent = '☁ Sync to Sheets'; btn.disabled = false; }
+}
+
+function exportFullSyncCSV() {
+  // Full export including all stage data — ready to paste into Google Sheets
+  const headers = ['priority','business_name','owner_name','category','phone',
+    'address','city','county','state','zip','website_status','online_presence',
+    'pitch_angle','tier','years_in_business','notes',
+    'stage_research','stage_first_call','stage_email_sent','stage_discovery_call',
+    'stage_proposal_sent','stage_follow_up','stage_decision','stage_notes',
+    'deal_value','last_contacted','next_action','next_action_date','assigned_to','date_added'];
+  
+  const rows = state.leads.map(l => {
+    const act = state.activity[l.id] || {};
+    const stages = act.stages || {};
+    const stageNote = Object.values(stages).map(s=>s.note).filter(Boolean).join(' | ');
+    return headers.map(h => {
+      if (h === 'stage_research') return stages.research?.value || '';
+      if (h === 'stage_first_call') return stages.first_call?.value || '';
+      if (h === 'stage_email_sent') return stages.email_sent?.value || '';
+      if (h === 'stage_discovery_call') return stages.discovery_call?.value || '';
+      if (h === 'stage_proposal_sent') return stages.proposal_sent?.value || '';
+      if (h === 'stage_follow_up') return stages.follow_up?.value || '';
+      if (h === 'stage_decision') return stages.decision?.value || '';
+      if (h === 'stage_notes') return stageNote;
+      return `"${String(l[h]||'').replace(/"/g,'""')}"`;
+    }).join(',');
+  });
+  
+  const csv = headers.join(',') + '\n' + rows.join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'LeadFunnel-sync-' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+}
+
+function testWebApp() {
+  const url = document.getElementById('gs-webapp-url').value.trim();
+  if (!url) { showToast('Paste your web app URL first'); return; }
+  saveWebAppUrl();
+  fetch(url).then(r => r.json()).then(d => {
+    if (d.status) { showToast('✅ Connected: ' + d.status); document.getElementById('gs-sync-status').textContent = '✅ Web app is live and responding'; }
+    else showToast('⚠️ Got response but unexpected format');
+  }).catch(e => {
+    // Try via proxy
+    fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`).then(r=>r.json()).then(d=>{
+      showToast('✅ Connected via proxy');
+    }).catch(() => showToast('❌ Could not reach web app — check the URL'));
+  });
+}
+
+let autoSyncTimer = null;
+function toggleAutoSync() {
+  if (autoSyncTimer) {
+    clearInterval(autoSyncTimer);
+    autoSyncTimer = null;
+    showToast('Auto-sync stopped');
+    document.getElementById('gs-sync-status').textContent = 'Auto-sync disabled';
+  } else {
+    syncToSheets();
+    autoSyncTimer = setInterval(syncToSheets, 5 * 60 * 1000);
+    showToast('Auto-sync every 5 min enabled');
+    document.getElementById('gs-sync-status').textContent = 'Auto-sync active — syncing every 5 minutes';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+function init(){
+  loadFromLS();
+  populateFilters();
+  renderLeads();
+  // Load web app URL into settings field
+  const webUrl = localStorage.getItem('zp_webapp_url')||'';
+  const webEl = document.getElementById('gs-webapp-url');
+  if(webEl && webUrl) webEl.value = webUrl;
+  // Show last sync time
+  const lastSync = localStorage.getItem('zp_last_sync');
+  const statusEl = document.getElementById('gs-sync-status');
+  if(lastSync && statusEl) statusEl.textContent = 'Last synced: '+lastSync;
+  // Update sidebar status dot
+  const gsStatus = document.getElementById('gs-status');
+  if(gsStatus){
+    if(webUrl){
+      gsStatus.innerHTML='<div class="gs-dot" style="background:var(--green)"></div>Sheets: Configured';
+      gsStatus.className='gs-connected';
+    } else {
+      gsStatus.innerHTML='<div class="gs-dot" style="background:var(--amber)"></div>Sheets: Setup needed';
+      gsStatus.className='gs-disconnected';
+    }
+  }
+}
+init();
+</script>
+</body>
+</html>
