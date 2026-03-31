@@ -7,11 +7,13 @@ let state = {
   workingLead: null,
   currentView: 'leads',
   filters: {},
-  activity: {}, // leadId -> {stages:{stageId:{value,note,timestamp}}, history:[]}
+  activity: {}, // leadId -> {stages:{stageId:{value,note,timestamp}}, history:[], visitedAt, lastVisitedAt, visitCount}
   settings: {name:'',email:'',phone:'',company:'ZagaPrime'},
   savedSearches: [], // [{id,name,desc,filters,timestamp}]
   searchHistory: [], // [{query,filters,resultCount,timestamp}]
-  activeQuickFilter: null // 'all'|'hot'|'worked'|'inprogress'|'won'
+  activeQuickFilter: null, // 'all'|'hot'|'worked'|'inprogress'|'won'
+  findResults: [],
+  findSearchMeta: null
 };
 
 // ══════════════════════════════════════════════════════
@@ -94,6 +96,7 @@ function renderLeads(){
       return `<div class="${cls}" title="${s.label}"></div>`;
     }).join('');
     const worked=Object.keys(stages).length>0;
+    const visited=(act.visitCount||0)>0;
     const wsMap={none:'b-red No Website',broken:'b-red Broken Site',outdated:'b-amber Outdated',has_site:'b-green Has Site'};
     const wsParts=(wsMap[l.websiteStatus]||'b-gray Unknown').split(' ');
     const wsClass=wsParts[0];const wsLabel=wsParts.slice(1).join(' ');
@@ -109,7 +112,10 @@ function renderLeads(){
     if(isWon) highlightClass=' won-card';
     else if(isInProgress) highlightClass=' in-progress';
     else if(isNewWorked) highlightClass=' worked-card';
+    else if(visited) highlightClass=' visited-card';
     else if(isNew) highlightClass=' new-card';
+    const visitLabel=visited?`<span class="badge b-gray" title="Viewed ${act.visitCount} time${act.visitCount!==1?'s':''}">${act.visitCount}x viewed</span>`:'<span class="badge b-gray">New</span>';
+    const statusBadge=isWon?'<span class="badge b-green">Won</span>':isInProgress?'<span class="badge b-amber">In Progress</span>':worked?'<span class="badge b-cyan">Worked</span>':visitLabel;
     return `<div class="lead-card t${l.tier}${state.selectedLead===l.id?' selected':''}${highlightClass}" onclick="selectLead('${l.id}')">
       <div class="card-priority">${l.priority}</div>
       <div class="card-top">
@@ -121,7 +127,7 @@ function renderLeads(){
       <div class="badges">
         <span class="badge ${wsClass}">${wsLabel}</span>
         <span class="badge ${tierColors[l.tier]}">${tierLabels[l.tier]}</span>
-        ${worked?'<span class="badge b-cyan">Working</span>':''}
+        ${statusBadge}
       </div>
       <div class="card-cat">${l.category} · ${l.city}, ${l.state}</div>
       ${l.phone?`<div class="card-phone">${l.phone}</div>`:'<div class="card-phone" style="color:var(--dim)">No phone listed</div>'}
@@ -159,19 +165,36 @@ function updateStats(){
 // ══════════════════════════════════════════════════════
 // LEAD DETAIL PANEL
 // ══════════════════════════════════════════════════════
-function selectLead(id){
+function selectLead(id,trackVisit=true){
   state.selectedLead=id;
   const l=state.leads.find(x=>x.id===id);
   if(!l)return;
-  document.querySelectorAll('.lead-card').forEach(c=>c.classList.remove('selected'));
-  const cards=document.querySelectorAll('.lead-card');
-  cards.forEach(c=>{if(c.querySelector('.card-name').textContent===l.name)c.classList.add('selected');});
+  if(!state.activity[id])state.activity[id]={stages:{},history:[]};
+  if(trackVisit){
+    const now=new Date().toISOString();
+    if(!state.activity[id].visitedAt)state.activity[id].visitedAt=now;
+    state.activity[id].lastVisitedAt=now;
+    state.activity[id].visitCount=(state.activity[id].visitCount||0)+1;
+    state.activity[id].history=state.activity[id].history||[];
+    const lastHistory=state.activity[id].history[state.activity[id].history.length-1];
+    const shouldLogVisit=!lastHistory||lastHistory.stage!=='visited'||(new Date(now)-new Date(lastHistory.timestamp))>300000;
+    if(shouldLogVisit){
+      state.activity[id].history.push({stage:'visited',value:'opened',timestamp:now});
+    }
+    saveToLS();
+  }
+  renderLeads();
   const panel=document.getElementById('lead-panel');
   panel.classList.add('open');
   document.getElementById('panel-biz-name').textContent=l.name;
   document.getElementById('panel-biz-cat').textContent=`${l.category} · ${l.city}, ${l.state}`;
   const act=state.activity[l.id]||{};
   const stages=act.stages||{};
+  const visitCount=act.visitCount||0;
+  const worked=Object.keys(stages).length>0;
+  const isWon=stages.decision&&stages.decision.value==='won';
+  const isInProgress=worked&&stages.first_call&&!isWon;
+  const leadStatus=isWon?'Won':isInProgress?'In Progress':worked?'Worked':visitCount>0?'Visited':'New';
   const wsMap={none:'<span class="badge b-red">No Website</span>',broken:'<span class="badge b-red">Broken / Wrong Site</span>',outdated:'<span class="badge b-amber">Outdated</span>',has_site:'<span class="badge b-green">Has Site</span>'};
   const tierMap={1:'<span class="badge b-red">🔴 Tier 1 — Hot</span>',2:'<span class="badge b-amber">🟡 Tier 2 — Warm</span>',3:'<span class="badge b-blue">🔵 Tier 3 — Long</span>'};
   // Stage summary
@@ -186,6 +209,13 @@ function selectLead(id){
     <div class="info-section">
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">${wsMap[l.websiteStatus]||''}${tierMap[l.tier]||''}<span class="badge b-gray">Priority #${l.priority}</span></div>
       ${stageIcons.length?`<div class="stage-summary">${stageSummary}</div>`:''}
+    </div>
+    <div class="info-section">
+      <div class="info-label">Lead Tracking</div>
+      ${infoRow('Status',leadStatus)}
+      ${infoRow('Views',`${visitCount} time${visitCount!==1?'s':''}`)}
+      ${act.visitedAt?infoRow('First viewed',new Date(act.visitedAt).toLocaleString()):''}
+      ${act.lastVisitedAt?infoRow('Last viewed',new Date(act.lastVisitedAt).toLocaleString()):''}
     </div>
     <div class="pitch-box"><div class="pitch-label">💡 Pitch Angle</div>${l.pitchAngle}</div>
     <div class="info-section">
@@ -411,7 +441,7 @@ function saveSalesData(){
   renderLeads();
   closeSalesMode();
   // Re-select lead to update panel
-  if(state.selectedLead)selectLead(state.selectedLead);
+  if(state.selectedLead)selectLead(state.selectedLead,false);
 }
 
 // ══════════════════════════════════════════════════════
@@ -496,7 +526,7 @@ function renderAnalytics(){
     const stageInfo=STAGES_DEF.find(s=>s.id===h.stage);
     const optInfo=stageInfo?stageInfo.options.find(o=>o.v===h.value):null;
     const dotCls=optInfo?(optInfo.t==='success'?'green':optInfo.t==='fail'?'red':'amber'):'blue';
-    const action=h.stage==='saved'?'progress saved':stageInfo?`${stageInfo.label}: ${optInfo?optInfo.l:h.value}`:`${h.stage}: ${h.value}`;
+    const action=h.stage==='saved'?'progress saved':h.stage==='visited'?'lead viewed':stageInfo?`${stageInfo.label}: ${optInfo?optInfo.l:h.value}`:`${h.stage}: ${h.value}`;
     const ts=new Date(h.timestamp).toLocaleDateString();
     return`<div class="af-item"><div class="af-dot ${dotCls}"></div><div><div class="af-biz">${h.biz}</div><div class="af-action">${action}</div></div><div class="af-time">${ts}</div></div>`;
   }).join('')||'<div class="empty"><div class="empty-text">No activity yet</div></div>';
@@ -606,9 +636,22 @@ function showView(view,navEl){
   state.currentView=view;
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(navEl)navEl.classList.add('active');
-  document.querySelectorAll('.view, .view-split').forEach(v=>{v.classList.remove('active');v.style.display='none';});
+  const main=document.querySelector('.main');
+  Array.from(main.children).forEach(v=>{
+    if(v.classList.contains('view')||v.classList.contains('view-split')){
+      v.classList.remove('active');
+      v.style.display='none';
+    }
+  });
   if(view==='leads'){
-    const vs=document.getElementById('view-leads');vs.classList.add('active');vs.style.display='flex';
+    const vs=document.getElementById('view-leads');
+    vs.classList.add('active');
+    vs.style.display='flex';
+    const leadsPane=vs.querySelector('.view');
+    if(leadsPane){
+      leadsPane.classList.add('active');
+      leadsPane.style.display='block';
+    }
   }else{
     const vEl=document.getElementById('view-'+view);
     if(vEl){vEl.classList.add('active');vEl.style.display='block';}
@@ -640,17 +683,216 @@ function addManualLead(){
   ['add-name','add-owner','add-cat','add-phone','add-city','add-county','add-pitch','add-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 }
 
-function searchArea(){
-  const state2=document.getElementById('new-state').value;
-  const county=document.getElementById('new-county').value.trim();
-  const city=document.getElementById('new-city').value.trim();
-  const cat=document.getElementById('new-cat-search').value;
+function getFindSearchParams(){
+  return {
+    state:document.getElementById('new-state').value.trim(),
+    county:document.getElementById('new-county').value.trim(),
+    city:document.getElementById('new-city').value.trim(),
+    category:document.getElementById('new-cat-search').value.trim()
+  };
+}
+
+function buildFindSearchLabel(params){
+  return [params.category||'Businesses',params.city,params.county,params.state].filter(Boolean).join(' in ');
+}
+
+function setFindSearchStatus(message,tone='info'){
+  const el=document.getElementById('find-search-status');
+  if(!el)return;
+  const colorMap={info:'var(--muted)',success:'var(--green)',warn:'var(--amber)',error:'var(--red)'};
+  el.textContent=message;
+  el.style.color=colorMap[tone]||colorMap.info;
+}
+
+function normalizeLeadKey(value){
+  return String(value||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+}
+
+function findExistingLeadForProspect(prospect){
+  const prospectName=normalizeLeadKey(prospect.name);
+  const prospectCity=normalizeLeadKey(prospect.city);
+  const prospectAddress=normalizeLeadKey(prospect.address);
+  return state.leads.find((lead)=>{
+    const nameMatch=normalizeLeadKey(lead.name)===prospectName;
+    const cityMatch=!prospectCity||normalizeLeadKey(lead.city)===prospectCity;
+    const addressMatch=prospectAddress&&normalizeLeadKey(lead.address)===prospectAddress;
+    return nameMatch&&(addressMatch||cityMatch);
+  })||null;
+}
+
+function getLeadPipelineStatus(lead){
+  if(!lead)return 'New';
+  const activity=state.activity[lead.id]||{};
+  const stages=activity.stages||{};
+  const worked=Object.keys(stages).length>0;
+  const won=stages.decision&&stages.decision.value==='won';
+  const inProgress=worked&&stages.first_call&&!won;
+  if(won)return 'Won';
+  if(inProgress)return 'In Progress';
+  if(worked)return 'Worked';
+  if((activity.visitCount||0)>0)return 'Visited';
+  return 'In Pipeline';
+}
+
+function createLeadFromProspect(prospect){
+  return {
+    id:'EXT'+String(Date.now()).slice(-6)+Math.floor(Math.random()*1000),
+    name:prospect.name,
+    owner:null,
+    category:prospect.category||'Other',
+    address:prospect.address||'',
+    city:prospect.city||'',
+    county:prospect.county||'',
+    state:prospect.state||'NJ',
+    zip:prospect.zip||'',
+    phone:prospect.phone||null,
+    email:null,
+    websiteStatus:'none',
+    onlinePresence:prospect.mapsUrl?'Google Maps profile found':'Business listing found',
+    pitchAngle:prospect.pitchAngle||`No website found. Offer a simple site, lead capture, and mobile-first contact flow for ${prospect.name}.`,
+    hookType:'none',
+    tier:prospect.tier||1,
+    priority:state.leads.length+1,
+    yearsInBusiness:null,
+    googleRating:null,
+    notes:prospect.notes||'Found by live no-website lead search.'
+  };
+}
+
+function importFoundLead(externalId){
+  const prospect=state.findResults.find((item)=>String(item.externalId)===String(externalId));
+  if(!prospect){showToast('Lead search result not found');return;}
+  const existing=findExistingLeadForProspect(prospect);
+  if(existing){
+    showToast(`${existing.name} is already in your pipeline`);
+    return;
+  }
+  const lead=createLeadFromProspect(prospect);
+  state.leads.push(lead);
+  saveToLS();
+  populateFilters();
+  renderLeads();
+  renderFindResults();
+  showToast(`${lead.name} added to pipeline`);
+}
+
+function importAllFoundLeads(){
+  if(!state.findResults.length){showToast('Run a lead search first');return;}
+  let added=0;
+  let skipped=0;
+  state.findResults.forEach((prospect)=>{
+    if(findExistingLeadForProspect(prospect)){skipped++;return;}
+    state.leads.push(createLeadFromProspect(prospect));
+    added++;
+  });
+  if(!added&&!skipped){showToast('No results to import');return;}
+  saveToLS();
+  populateFilters();
+  renderLeads();
+  renderFindResults();
+  showToast(`${added} added, ${skipped} already in pipeline`);
+}
+
+function viewLeadFromProspect(externalId){
+  const prospect=state.findResults.find((item)=>String(item.externalId)===String(externalId));
+  if(!prospect)return;
+  const existing=findExistingLeadForProspect(prospect);
+  if(!existing){showToast('This lead is not in your pipeline yet');return;}
+  showView('leads',document.querySelector('[data-view=leads]'));
+  selectLead(existing.id);
+}
+
+function renderFindResults(){
+  const summaryEl=document.getElementById('find-results-summary');
+  const listEl=document.getElementById('find-results-list');
+  if(!summaryEl||!listEl)return;
+  if(!state.findResults.length){
+    summaryEl.textContent='No live results yet. Search for a city, county, or category to find businesses with no website listed.';
+    listEl.innerHTML='<div class="empty" style="padding:32px 20px;"><div class="empty-text">No live search results yet.</div></div>';
+    return;
+  }
+  const meta=state.findSearchMeta||{};
+  summaryEl.textContent=`${state.findResults.length} no-website matches found for ${meta.label||'your search'}.`;
+  listEl.innerHTML=state.findResults.map((prospect)=>{
+    const existing=findExistingLeadForProspect(prospect);
+    const status=existing?getLeadPipelineStatus(existing):'New Prospect';
+    const existingBadge=existing?`<span class="badge b-blue">${status}</span>`:'<span class="badge b-red">No Website</span>';
+    const phoneLabel=prospect.phone||'No phone found';
+    const actionButton=existing
+      ? `<button class="btn btn-ghost btn-sm" onclick="viewLeadFromProspect('${prospect.externalId}')">View Existing</button>`
+      : `<button class="btn btn-primary btn-sm" onclick="importFoundLead('${prospect.externalId}')">Add to Pipeline</button>`;
+    return `<div class="find-result-card${existing?' existing':''}">
+      <div class="find-result-head">
+        <div>
+          <div class="find-result-name">${prospect.name}</div>
+          <div class="find-result-meta">${prospect.category||'Business'} · ${prospect.city||'Unknown city'}, ${prospect.state||''}</div>
+        </div>
+        <div class="badges">
+          ${existingBadge}
+          <span class="badge b-gray">Tier ${prospect.tier||1}</span>
+        </div>
+      </div>
+      <div class="find-result-address">${prospect.address||'Address unavailable'}</div>
+      <div class="find-result-phone">${phoneLabel}</div>
+      <div class="find-result-note">${prospect.notes||'Found by live search and filtered to businesses with no website listed.'}</div>
+      <div class="find-result-actions">
+        ${actionButton}
+        ${prospect.mapsUrl?`<a class="btn btn-ghost btn-sm" href="${prospect.mapsUrl}" target="_blank" rel="noreferrer">Open Maps</a>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function applyAreaFilters(){
+  const params=getFindSearchParams();
   ['f-state','f-county','f-city','f-category'].forEach((fid,i)=>{
-    const val=[state2,county,city,cat][i];
+    const val=[params.state,params.county,params.city,params.category][i];
     const el=document.getElementById(fid);
-    if(el&&val)el.value=val;
+    if(el)el.value=val||'';
   });
   showView('leads',document.querySelector('[data-view=leads]'));
+  applyFilters();
+}
+
+async function searchArea(){
+  const params=getFindSearchParams();
+  if(!params.state&&!params.city&&!params.county&&!params.category){
+    setFindSearchStatus('Add at least a state, city, county, or category before searching.', 'warn');
+    showToast('Enter an area or category first');
+    return;
+  }
+  const queryLabel=buildFindSearchLabel(params);
+  setFindSearchStatus(`Searching live listings for ${queryLabel}...`, 'info');
+  document.getElementById('find-results-summary').textContent='Searching for businesses with no website listed...';
+  document.getElementById('find-results-list').innerHTML='<div class="empty" style="padding:32px 20px;"><div class="empty-text">Searching live business data...</div></div>';
+  try{
+    const query=new URLSearchParams(params);
+    const response=await fetch(`/api/search-leads?${query.toString()}`);
+    const data=await response.json();
+    if(!response.ok||!data.ok){
+      throw new Error(data.error||'Live lead search failed');
+    }
+    state.findResults=data.results||[];
+    state.findSearchMeta={
+      label:queryLabel,
+      query:data.query||queryLabel,
+      searchedAt:new Date().toISOString()
+    };
+    renderFindResults();
+    if(state.findResults.length){
+      setFindSearchStatus(`Found ${state.findResults.length} businesses without websites for ${queryLabel}.`, 'success');
+      showToast(`${state.findResults.length} new lead matches found`);
+    }else{
+      setFindSearchStatus(`No no-website matches were found for ${queryLabel}. Try a broader city or category.`, 'warn');
+      showToast('No no-website matches found');
+    }
+  }catch(err){
+    state.findResults=[];
+    state.findSearchMeta={label:queryLabel,error:err.message};
+    renderFindResults();
+    setFindSearchStatus(err.message, 'error');
+    showToast('Live lead search is not configured yet');
+  }
 }
 
 function importCSV(){
@@ -932,14 +1174,17 @@ function showToast(msg){
 // ══════════════════════════════════════════════════════
 
 function quickFilter(type){
-  // Toggle: clicking active filter clears it
-  if(state.activeQuickFilter===type||type==='all'){
+  if(type==='all'){
+    state.activeQuickFilter=state.activeQuickFilter==='all'?null:'all';
+  }else if(state.activeQuickFilter===type){
     state.activeQuickFilter=null;
+  }else{
+    state.activeQuickFilter=type;
+  }
+  if(!state.activeQuickFilter){
     document.querySelectorAll('.ts-btn').forEach(b=>b.classList.remove('active-filter'));
     const bar=document.getElementById('filter-active-bar');
     if(bar)bar.style.display='none';
-  }else{
-    state.activeQuickFilter=type;
   }
   // Make sure we're on leads view
   const leadsNavEl=document.querySelector('[data-view=leads]');
@@ -1254,6 +1499,8 @@ function init(){
   loadFromLS();
   populateFilters();
   renderLeads();
+  renderFindResults();
+  setFindSearchStatus('Live no-website search uses the Vercel /api/search-leads endpoint. Claude is not required.', 'info');
   // Load web app URL into settings field
   const webUrl = localStorage.getItem('zp_webapp_url')||'';
   const webEl = document.getElementById('gs-webapp-url');
