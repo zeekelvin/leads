@@ -201,7 +201,7 @@ cd <repo-name>
 
 ## Vercel Deployment
 
-This repo is set up for static hosting on Vercel with a serverless API route for live lead search.
+This repo is set up for static hosting on Vercel.
 
 ### Dashboard flow
 
@@ -210,8 +210,7 @@ This repo is set up for static hosting on Vercel with a serverless API route for
 3. Click `Add New -> Project`.
 4. Import the GitHub repository.
 5. Keep the root as the project root.
-6. In `Settings -> Environment Variables`, add `GOOGLE_PLACES_API_KEY`.
-7. Deploy with the default settings.
+6. Deploy with the default settings.
 
 ### CLI flow
 
@@ -222,14 +221,6 @@ cd C:\Users\mmdco\Downloads\Zagaprime-sales-system\deploy
 vercel
 vercel --prod
 ```
-
-Before using live no-website search, add:
-
-```text
-GOOGLE_PLACES_API_KEY=your_google_places_api_key
-```
-
-You do not need a Claude API key for lead search. The app uses the Vercel `/api/search-leads` route and Google Places.
 
 For v1, the default Vercel domain is enough.
 
@@ -258,13 +249,6 @@ For v1, the default Vercel domain is enough.
 - Verify the web app URL is the deployed `/exec` URL
 - Re-deploy the script as a web app if permissions changed
 - Confirm the script is deployed with access set to `Anyone`
-
-### Live lead search is not working
-
-- Confirm the site is running on Vercel or through `vercel dev`, not only from a plain static file open
-- Confirm `GOOGLE_PLACES_API_KEY` is set in the Vercel project
-- Redeploy after adding the environment variable
-- Claude is not required for this feature
 
 ### CSV import looks wrong
 
