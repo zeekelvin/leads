@@ -491,7 +491,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
           </div>
         </div>
         <button class="btn btn-primary" style="justify-content:center;min-width:200px;" onclick="searchGoogleForLeads()" id="gp-search-btn">🔍 Search Google Maps</button>
-        <div class="gp-api-note" id="gp-api-note">
+        <div class="gp-api-note" id="gp-api-note" style="display:none;">
           ⚡ <strong>Requires a Google Places API key</strong> — set it in <a href="#" onclick="showView('settings',document.querySelector('[data-view=settings]'))" style="color:var(--amber)">Settings → API Keys</a>. Free tier includes $200/month credit (thousands of searches). Enable <em>Maps JavaScript API</em> and <em>Places API</em> in Google Cloud Console.
         </div>
         <div class="gp-results-area" id="gp-results"></div>
@@ -588,7 +588,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
       <div class="settings-sub">Required for live lead search. Your keys are stored only in your browser — never sent anywhere except directly to Google.</div>
       <div class="input-group">
         <label>Google Places API Key</label>
-        <input type="text" id="google-api-key" placeholder="AIzaSy..." style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 12px;font-family:var(--mono);font-size:12px;width:100%;" oninput="saveGoogleApiKey()">
+        <input type="text" id="google-api-key" value="AIzaSyAlMEOnserKBySf71melBJKNAcpJk9w2gw" style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 12px;font-family:var(--mono);font-size:12px;width:100%;" oninput="saveGoogleApiKey()">
       </div>
       <div style="font-size:11px;color:var(--dim);line-height:1.7;margin-top:4px;">
         To get a key: <strong>console.cloud.google.com</strong> → Create project → Enable <em>Maps JavaScript API</em> + <em>Places API</em> → Credentials → Create API Key → restrict to your domain.<br>
@@ -2313,6 +2313,10 @@ function init(){
   populateFilters();
   renderLeads();
   updateStats();
+  // Set default Google API key if not already saved
+  if(!localStorage.getItem('zp_google_api_key')){
+    localStorage.setItem('zp_google_api_key','AIzaSyAlMEOnserKBySf71melBJKNAcpJk9w2gw');
+  }
   // System description — hide if previously dismissed
   if(localStorage.getItem('zp_sys_desc_dismissed')==='1'){
     const el=document.getElementById('sys-desc-card');
