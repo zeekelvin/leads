@@ -269,6 +269,26 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px;}
 
+/* ─── SYSTEM DESCRIPTION CARD ─── */
+.sys-desc-card{background:linear-gradient(135deg,rgba(79,126,248,0.08),rgba(124,109,240,0.06));border:1px solid rgba(79,126,248,0.25);border-radius:var(--r2);padding:18px 20px;margin-bottom:16px;display:flex;gap:16px;align-items:flex-start;}
+.sys-desc-icon{font-size:28px;flex-shrink:0;margin-top:2px;}
+.sys-desc-body{flex:1;}
+.sys-desc-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.sys-desc-text{font-size:12px;color:var(--muted);line-height:1.7;}
+.sys-desc-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.sys-desc-close{background:transparent;border:none;color:var(--dim);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px;flex-shrink:0;}
+.sys-desc-close:hover{color:var(--muted);}
+
+/* ─── GOOGLE PLACES SEARCH ─── */
+.gp-results-area{margin-top:14px;}
+.gp-result-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:14px;margin-bottom:8px;transition:border-color 0.15s;}
+.gp-result-card:hover{border-color:var(--border2);}
+.gp-result-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.gp-biz-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.gp-biz-addr{font-size:11px;color:var(--muted);}
+.find-card-full{grid-column:1/-1;}
+.gp-api-note{font-size:11px;color:var(--dim);background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);border-radius:var(--r);padding:8px 12px;margin-top:10px;line-height:1.6;}
+
 /* ─── CLICKABLE STAT BUTTONS ─── */
 .ts-btn{cursor:pointer;border-radius:20px;padding:4px 10px;transition:all 0.12s;}
 .ts-btn:hover{background:rgba(99,120,200,0.12);}
@@ -352,6 +372,27 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
   <!-- LEADS VIEW -->
   <div class="view-split active" id="view-leads">
     <div class="leads-content">
+      <!-- SYSTEM DESCRIPTION CARD -->
+      <div class="sys-desc-card" id="sys-desc-card">
+        <div class="sys-desc-icon">🎯</div>
+        <div class="sys-desc-body">
+          <div class="sys-desc-title">ZagaPrime Sales System — Full Digital Presence CRM</div>
+          <div class="sys-desc-text">
+            This system helps you find and close local businesses that have <strong>no website, a broken site, or weak online presence</strong> — and sell them a complete digital package ($2,400 setup + $800/mo retainer + Google Ads management).
+            <br><br>
+            <strong>How to use it:</strong> Click any lead card to open its detail panel → review the pitch angle and research notes → click <em>⚡ Work This Lead</em> to open the full sales mode with auto-filled call scripts, objection handlers, email templates, and stage tracking. Log each stage as you move the deal through the pipeline.
+            <br><br>
+            <strong>Find new leads:</strong> Go to <em>Find New Leads → Search Google</em> — enter any city and category to pull live businesses from Google Maps and automatically surface those with no website.
+          </div>
+          <div class="sys-desc-tags">
+            <span class="badge b-red">🔴 Tier 1 = Hot — call today</span>
+            <span class="badge b-amber">🟡 Tier 2 = Warm — email first</span>
+            <span class="badge b-blue">🔵 Tier 3 = Long — nurture</span>
+            <span class="badge b-green">$12,000 avg. value per client/year</span>
+          </div>
+        </div>
+        <button class="sys-desc-close" onclick="dismissSysDesc()" title="Dismiss">✕</button>
+      </div>
       <!-- ACTIVE FILTER BANNER -->
       <div class="filter-active-bar" id="filter-active-bar" style="display:none;">
         <span id="filter-active-label">Showing filtered results</span>
@@ -416,11 +457,49 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
   <!-- FIND LEADS VIEW -->
   <div class="view" id="view-find" style="display:none;">
     <div class="page-title">Find New Leads</div>
-    <div class="page-sub">Search a new area, import from CSV, or add leads manually</div>
+    <div class="page-sub">Search Google Maps live for businesses with no website, import from CSV, or add manually</div>
     <div class="find-grid">
+      <!-- GOOGLE PLACES SEARCH — FULL WIDTH -->
+      <div class="find-card find-card-full">
+        <h3>🔍 Search Google Maps for Leads</h3>
+        <p>Enter a city and business category. The system calls Google Maps, checks each result for a website, and surfaces only the businesses with <strong>no online presence</strong> — your ideal prospects.</p>
+        <div class="ig-row">
+          <div class="input-group">
+            <label>City *</label>
+            <input type="text" id="gp-city" placeholder="e.g. Newton" value="Andover">
+          </div>
+          <div class="input-group">
+            <label>State</label>
+            <select id="gp-state">
+              <option value="NJ">New Jersey</option>
+              <option value="NY">New York</option>
+              <option value="PA">Pennsylvania</option>
+              <option value="CT">Connecticut</option>
+              <option value="MA">Massachusetts</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Business Category *</label>
+            <input type="text" id="gp-category" placeholder="e.g. Auto Repair, Hair Salon, Landscaping" value="Auto Repair">
+          </div>
+          <div class="input-group">
+            <label>Max Results</label>
+            <select id="gp-limit">
+              <option value="10">10 results</option>
+              <option value="20" selected>20 results</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="justify-content:center;min-width:200px;" onclick="searchGoogleForLeads()" id="gp-search-btn">🔍 Search Google Maps</button>
+        <div class="gp-api-note" id="gp-api-note">
+          ⚡ <strong>Requires a Google Places API key</strong> — set it in <a href="#" onclick="showView('settings',document.querySelector('[data-view=settings]'))" style="color:var(--amber)">Settings → API Keys</a>. Free tier includes $200/month credit (thousands of searches). Enable <em>Maps JavaScript API</em> and <em>Places API</em> in Google Cloud Console.
+        </div>
+        <div class="gp-results-area" id="gp-results"></div>
+        <div id="gp-map-hidden" style="display:none;"></div>
+      </div>
       <div class="find-card">
-        <h3>🗺️ Search by Area</h3>
-        <p>Filter your view or add leads from a specific region. Use the filters above to target your territory.</p>
+        <h3>🗺️ Filter Existing Leads by Area</h3>
+        <p>Already have leads in your pipeline? Filter your view by region to focus your calling on one territory at a time.</p>
         <div class="ig-row">
           <div class="input-group"><label>State</label><select id="new-state"><option value="NJ">New Jersey</option><option value="NY">New York</option><option value="PA">Pennsylvania</option><option value="CT">Connecticut</option></select></div>
           <div class="input-group"><label>County</label><input type="text" id="new-county" placeholder="e.g. Sussex County"></div>
@@ -429,7 +508,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
           <div class="input-group"><label>City</label><input type="text" id="new-city" placeholder="e.g. Newton"></div>
           <div class="input-group"><label>Category</label><select id="new-cat-search"><option value="">Any</option><option>Auto Repair</option><option>Hair Salon</option><option>Landscaping</option><option>Restaurant</option><option>Farm</option><option>Retail</option><option>B2B</option><option>Consignment</option></select></div>
         </div>
-        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="searchArea()">Search This Area</button>
+        <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="searchArea()">Filter Leads View</button>
       </div>
       <div class="find-card">
         <h3>➕ Add Lead Manually</h3>
@@ -501,7 +580,22 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
   <!-- SETTINGS VIEW -->
   <div class="view" id="view-settings" style="display:none;">
     <div class="page-title">Settings</div>
-    <div class="page-sub">Configure Google Sheets sync and data management</div>
+    <div class="page-sub">Configure API keys, Google Sheets sync and data management</div>
+
+    <!-- API KEYS -->
+    <div class="settings-section">
+      <div class="settings-title">🔑 API Keys</div>
+      <div class="settings-sub">Required for live lead search. Your keys are stored only in your browser — never sent anywhere except directly to Google.</div>
+      <div class="input-group">
+        <label>Google Places API Key</label>
+        <input type="text" id="google-api-key" placeholder="AIzaSy..." style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:8px 12px;font-family:var(--mono);font-size:12px;width:100%;" oninput="saveGoogleApiKey()">
+      </div>
+      <div style="font-size:11px;color:var(--dim);line-height:1.7;margin-top:4px;">
+        To get a key: <strong>console.cloud.google.com</strong> → Create project → Enable <em>Maps JavaScript API</em> + <em>Places API</em> → Credentials → Create API Key → restrict to your domain.<br>
+        Free tier: $200/month credit (~4,000 Place Details calls). No credit card charged under that limit.
+      </div>
+    </div>
+
     <div class="settings-section">
       <div class="settings-title">📊 Google Sheets Integration</div>
       <div class="settings-sub">Paste your published CSV URL. The system tries a direct connection first, then automatically falls back through multiple CORS proxies — no extra setup needed.</div>
@@ -1752,7 +1846,14 @@ function loadSettingsUI(){
   document.getElementById('set-company').value=s.company||'';
   const gsUrl=localStorage.getItem('zp_gs_url')||'';
   document.getElementById('gs-url').value=gsUrl;
+  const apiKey=localStorage.getItem('zp_google_api_key')||'';
+  const apiKeyEl=document.getElementById('google-api-key');
+  if(apiKeyEl)apiKeyEl.value=apiKey;
   updateStorageInfo();
+}
+function saveGoogleApiKey(){
+  const el=document.getElementById('google-api-key');
+  if(el)localStorage.setItem('zp_google_api_key',el.value.trim());
 }
 function saveSettings(){
   state.settings={name:document.getElementById('set-name').value,email:document.getElementById('set-email').value,phone:document.getElementById('set-phone').value,company:document.getElementById('set-company').value};
@@ -1937,6 +2038,154 @@ function toggleAutoSync() {
 }
 
 // ══════════════════════════════════════════════════════
+// SYSTEM DESCRIPTION
+// ══════════════════════════════════════════════════════
+function dismissSysDesc(){
+  const el=document.getElementById('sys-desc-card');
+  if(el)el.style.display='none';
+  localStorage.setItem('zp_sys_desc_dismissed','1');
+}
+
+// ══════════════════════════════════════════════════════
+// GOOGLE PLACES LEAD SEARCH
+// ══════════════════════════════════════════════════════
+function loadGoogleMapsAPI(apiKey){
+  return new Promise((resolve,reject)=>{
+    if(window.google&&window.google.maps&&window.google.maps.places){resolve();return;}
+    window._googleMapsReady=resolve;
+    const s=document.createElement('script');
+    s.src=`https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=_googleMapsReady`;
+    s.onerror=()=>reject(new Error('Failed to load Google Maps API — check your API key'));
+    document.head.appendChild(s);
+  });
+}
+
+async function searchGoogleForLeads(){
+  const apiKey=localStorage.getItem('zp_google_api_key')||'';
+  if(!apiKey){
+    showToast('Set your Google API key in Settings first');
+    showView('settings',document.querySelector('[data-view=settings]'));
+    return;
+  }
+  const city=document.getElementById('gp-city').value.trim();
+  const gpState=document.getElementById('gp-state').value;
+  const category=document.getElementById('gp-category').value.trim();
+  const limit=parseInt(document.getElementById('gp-limit').value)||20;
+  if(!city||!category){showToast('Enter a city and category');return;}
+
+  const btn=document.getElementById('gp-search-btn');
+  const resultsEl=document.getElementById('gp-results');
+  btn.textContent='🔍 Searching...';btn.disabled=true;
+  resultsEl.innerHTML='<div class="empty"><div class="empty-text">Loading Google Maps...</div></div>';
+
+  try{
+    await loadGoogleMapsAPI(apiKey);
+  }catch(e){
+    resultsEl.innerHTML=`<div class="empty"><div class="empty-text">❌ ${e.message}</div></div>`;
+    btn.textContent='🔍 Search Google Maps';btn.disabled=false;return;
+  }
+
+  const mapDiv=document.getElementById('gp-map-hidden');
+  const map=new google.maps.Map(mapDiv,{center:{lat:40.7,lng:-74.4},zoom:10});
+  const svc=new google.maps.places.PlacesService(map);
+
+  const query=`${category} in ${city}, ${gpState}`;
+  resultsEl.innerHTML=`<div class="empty"><div class="empty-text">Searching "${query}"...</div></div>`;
+
+  svc.textSearch({query},(results,status)=>{
+    if(status!==google.maps.places.PlacesServiceStatus.OK||!results||!results.length){
+      resultsEl.innerHTML=`<div class="empty"><div class="empty-text">No results found for "${query}". Try different keywords.</div></div>`;
+      btn.textContent='🔍 Search Google Maps';btn.disabled=false;return;
+    }
+
+    const toCheck=results.slice(0,limit);
+    resultsEl.innerHTML=`<div class="empty"><div class="empty-text">Found ${toCheck.length} businesses — checking each for website... <span id="gp-progress">0/${toCheck.length}</span></div></div>`;
+
+    let checked=0;
+    const noWebsite=[];
+
+    const checkNext=()=>{
+      const progEl=document.getElementById('gp-progress');
+      if(progEl)progEl.textContent=`${checked}/${toCheck.length}`;
+      if(checked>=toCheck.length){
+        renderGoogleLeadResults(noWebsite,city,gpState,category);
+        btn.textContent='🔍 Search Google Maps';btn.disabled=false;
+        return;
+      }
+      const place=toCheck[checked];
+      svc.getDetails({
+        placeId:place.place_id,
+        fields:['name','website','formatted_phone_number','formatted_address','rating','types','vicinity']
+      },(detail,dStatus)=>{
+        checked++;
+        if(dStatus==='OK'&&detail&&!detail.website){
+          noWebsite.push({...detail,_city:city,_state:gpState,_category:category});
+        }
+        setTimeout(checkNext,150); // small delay to avoid rate limit
+      });
+    };
+    checkNext();
+  });
+}
+
+function renderGoogleLeadResults(results,city,gpState,category){
+  const container=document.getElementById('gp-results');
+  if(!container)return;
+  window._gpResults=results;
+  if(!results.length){
+    container.innerHTML=`<div class="empty" style="padding:24px"><div class="empty-icon">✅</div><div class="empty-text">No businesses without a website found in this search.<br>Try a different category or nearby city.</div></div>`;
+    return;
+  }
+  const countLabel=`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;padding-top:4px;">Found <strong style="color:var(--text)">${results.length}</strong> businesses with no website in <strong style="color:var(--text)">${category} · ${city}, ${gpState}</strong></div>`;
+  container.innerHTML=countLabel+results.map((place,i)=>{
+    const alreadyAdded=state.leads.some(l=>l.name.toLowerCase()===(place.name||'').toLowerCase());
+    const ratingBadge=place.rating?`<span class="badge b-amber">⭐ ${place.rating}</span>`:'';
+    const phoneBadge=place.formatted_phone_number?`<span class="badge b-gray">${place.formatted_phone_number}</span>`:'<span class="badge b-gray" style="color:var(--dim)">No phone listed</span>';
+    return`<div class="gp-result-card">
+      <div class="gp-result-top">
+        <div style="flex:1">
+          <div class="gp-biz-name">${place.name}</div>
+          <div class="gp-biz-addr">${place.formatted_address||place.vicinity||''}</div>
+        </div>
+        ${alreadyAdded
+          ?'<span class="badge b-green" style="flex-shrink:0">✓ In Pipeline</span>'
+          :`<button class="btn btn-primary btn-sm" style="flex-shrink:0" onclick="addGoogleLead(${i})">+ Add Lead</button>`}
+      </div>
+      <div class="badges" style="margin-top:8px;">
+        <span class="badge b-red">No Website</span>
+        ${ratingBadge}
+        ${phoneBadge}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function addGoogleLead(i){
+  const place=window._gpResults[i];
+  if(!place)return;
+  const id='GP'+String(Date.now()).slice(-6);
+  const newLead={
+    id,name:place.name,owner:null,
+    category:place._category||'Local Business',
+    address:place.formatted_address||place.vicinity||'',
+    city:place._city,county:'',state:place._state,zip:'',
+    phone:place.formatted_phone_number||null,email:null,
+    websiteStatus:'none',
+    onlinePresence:'Found via Google Maps — no website on file',
+    pitchAngle:`${place._category} in ${place._city} with no website — customers searching online go straight to competitors`,
+    hookType:'none',tier:1,
+    priority:state.leads.length+1,
+    yearsInBusiness:null,
+    googleRating:place.rating||null,
+    notes:`Sourced from Google Maps search (${place._category} · ${place._city}, ${place._state}).${place.rating?' Rating: '+place.rating+'/5':''}`
+  };
+  state.leads.push(newLead);
+  saveToLS();populateFilters();renderLeads();
+  showToast(`${place.name} added to pipeline!`);
+  renderGoogleLeadResults(window._gpResults,place._city,place._state,place._category);
+}
+
+// ══════════════════════════════════════════════════════
 // QUICK FILTER
 // ══════════════════════════════════════════════════════
 function quickFilter(type){
@@ -2064,6 +2313,11 @@ function init(){
   populateFilters();
   renderLeads();
   updateStats();
+  // System description — hide if previously dismissed
+  if(localStorage.getItem('zp_sys_desc_dismissed')==='1'){
+    const el=document.getElementById('sys-desc-card');
+    if(el)el.style.display='none';
+  }
   // Load web app URL into settings field
   const webUrl = localStorage.getItem('zp_webapp_url')||'';
   const webEl = document.getElementById('gs-webapp-url');
