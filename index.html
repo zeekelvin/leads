@@ -268,6 +268,41 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px;}
+
+/* ─── CLICKABLE STAT BUTTONS ─── */
+.ts-btn{cursor:pointer;border-radius:20px;padding:4px 10px;transition:all 0.12s;}
+.ts-btn:hover{background:rgba(99,120,200,0.12);}
+.ts-btn.active-filter{background:rgba(79,126,248,0.18);outline:1px solid rgba(79,126,248,0.35);}
+.ts-btn.active-filter b{color:var(--accent);}
+
+/* ─── FILTER ACTIVE BAR ─── */
+.filter-active-bar{display:flex;align-items:center;gap:8px;background:rgba(79,126,248,0.08);border:1px solid rgba(79,126,248,0.2);border-radius:var(--r);padding:8px 14px;margin-bottom:12px;font-size:12px;color:var(--muted);}
+.filter-active-bar button{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:var(--sans);}
+.filter-active-bar button:hover{color:var(--text);border-color:var(--border2);}
+
+/* ─── INNER LEADS CONTENT ─── */
+.leads-content{flex:1;overflow-y:auto;padding:20px;}
+
+/* ─── LEAD CARD STATES ─── */
+.lead-card.in-progress{border-color:rgba(245,158,11,0.5);box-shadow:0 0 0 1px rgba(245,158,11,0.2);}
+.lead-card.in-progress::after{content:'IN PROGRESS';position:absolute;bottom:8px;right:10px;font-size:9px;font-weight:700;color:var(--amber);letter-spacing:0.08em;}
+.lead-card.won-card{border-color:rgba(16,185,129,0.5);box-shadow:0 0 0 1px rgba(16,185,129,0.2);}
+.lead-card.won-card::after{content:'WON ✓';position:absolute;bottom:8px;right:10px;font-size:9px;font-weight:700;color:var(--green);letter-spacing:0.08em;}
+.lead-card.visited-card{border-left:3px solid rgba(6,182,212,0.5);}
+
+/* ─── SAVED SEARCHES ─── */
+.saved-search-item{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color 0.15s;margin-bottom:8px;}
+.saved-search-item:hover{border-color:var(--border2);}
+.ss-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.ss-desc{font-size:11px;color:var(--muted);}
+.ss-actions{display:flex;gap:6px;flex-shrink:0;}
+
+/* ─── HISTORY ITEMS ─── */
+.history-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r);cursor:pointer;transition:background 0.12s;font-size:12px;border-bottom:1px solid rgba(99,120,200,0.06);}
+.history-item:hover{background:var(--s1);}
+.hi-query{flex:1;color:var(--text);}
+.hi-count{color:var(--muted);flex-shrink:0;}
+.hi-time{color:var(--dim);font-size:11px;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -276,10 +311,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 <div class="topbar">
   <div class="logo"><div class="logo-dot"></div>Zaga<em>Prime</em> <span style="font-size:11px;font-weight:400;color:var(--muted);margin-left:4px;">SALES SYSTEM</span></div>
   <div class="top-stats">
-    <div class="ts">Total <b id="stat-total">0</b></div>
-    <div class="ts red">Hot <b id="stat-hot">0</b></div>
-    <div class="ts amber">Worked <b id="stat-worked">0</b></div>
-    <div class="ts green">Won <b id="stat-won">0</b></div>
+    <div class="ts ts-btn" onclick="quickFilter('all')" id="sf-all" title="Show all leads"><b id="stat-total">0</b> Total</div>
+    <div class="ts ts-btn red" onclick="quickFilter('hot')" id="sf-hot" title="Tier 1 hot leads"><b id="stat-hot">0</b> Hot</div>
+    <div class="ts ts-btn amber" onclick="quickFilter('worked')" id="sf-worked" title="Leads with activity"><b id="stat-worked">0</b> Worked</div>
+    <div class="ts ts-btn cyan" onclick="quickFilter('inprogress')" id="sf-inprogress" title="Currently in pipeline"><b id="stat-inprogress">0</b> In Progress</div>
+    <div class="ts ts-btn green" onclick="quickFilter('won')" id="sf-won" title="Closed won"><b id="stat-won">0</b> Won</div>
   </div>
   <div class="top-btns">
     <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
@@ -299,6 +335,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
   <div class="nav-group">
     <div class="nav-label">Tools</div>
     <div class="nav-item" onclick="showView('find',this)" data-view="find"><span class="icon">🔍</span>Find New Leads</div>
+    <div class="nav-item" onclick="showView('searches',this)" data-view="searches"><span class="icon">🔖</span>Saved Searches<span class="nav-count" id="nav-searches-count">0</span></div>
+    <div class="nav-item" onclick="showView('history',this)" data-view="history"><span class="icon">🕐</span>Search History</div>
     <div class="nav-item" onclick="showView('settings',this)" data-view="settings"><span class="icon">⚙️</span>Settings</div>
   </div>
   <div class="sidebar-footer">
@@ -313,7 +351,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
 
   <!-- LEADS VIEW -->
   <div class="view-split active" id="view-leads">
-    <div class="view active" style="padding:20px;flex:1;">
+    <div class="leads-content">
+      <!-- ACTIVE FILTER BANNER -->
+      <div class="filter-active-bar" id="filter-active-bar" style="display:none;">
+        <span id="filter-active-label">Showing filtered results</span>
+        <button onclick="clearFilters()">✕ Clear filter</button>
+        <button onclick="saveCurrentSearch()" style="margin-left:auto;">💾 Save this search</button>
+      </div>
       <!-- FILTER BAR -->
       <div class="filter-bar">
         <input type="text" id="f-search" placeholder="🔍  Search business, category..." oninput="applyFilters()">
@@ -432,6 +476,26 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- SAVED SEARCHES VIEW -->
+  <div class="view" id="view-searches" style="display:none;">
+    <div class="page-title">Saved Searches</div>
+    <div class="page-sub">Your saved filters — click any to re-apply instantly</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="btn btn-ghost btn-sm" onclick="clearAllSavedSearches()">🗑 Clear All</button>
+    </div>
+    <div id="saved-searches-list"></div>
+  </div>
+
+  <!-- SEARCH HISTORY VIEW -->
+  <div class="view" id="view-history" style="display:none;">
+    <div class="page-title">Search History</div>
+    <div class="page-sub">Every search you've run — click to re-apply, 🔖 to save permanently</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="btn btn-ghost btn-sm" onclick="clearSearchHistory()">🗑 Clear History</button>
+    </div>
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;" id="search-history-list"></div>
   </div>
 
   <!-- SETTINGS VIEW -->
@@ -838,8 +902,11 @@ let state = {
   workingLead: null,
   currentView: 'leads',
   filters: {},
-  activity: {}, // leadId -> {stages:{stageId:{value,note,timestamp}}, history:[]}
-  settings: {name:'Kelvin Osazee',email:'kelvin@zagaprime.com',phone:'',company:'ZagaPrime | Apex Builders'}
+  activity: {}, // leadId -> {stages:{stageId:{value,note,timestamp}}, history:[], visitedAt, visitCount}
+  settings: {name:'Kelvin Osazee',email:'kelvin@zagaprime.com',phone:'',company:'ZagaPrime | Apex Builders'},
+  savedSearches: [],
+  searchHistory: [],
+  activeQuickFilter: null
 };
 
 // ══════════════════════════════════════════════════════
@@ -850,6 +917,8 @@ function saveToLS(){
     localStorage.setItem('zp_leads',JSON.stringify(state.leads));
     localStorage.setItem('zp_activity',JSON.stringify(state.activity));
     localStorage.setItem('zp_settings',JSON.stringify(state.settings));
+    localStorage.setItem('zp_saved_searches',JSON.stringify(state.savedSearches));
+    localStorage.setItem('zp_search_history',JSON.stringify(state.searchHistory.slice(0,100)));
   }catch(e){console.warn('Storage error',e);}
 }
 function loadFromLS(){
@@ -857,10 +926,14 @@ function loadFromLS(){
     const l=localStorage.getItem('zp_leads');
     const a=localStorage.getItem('zp_activity');
     const s=localStorage.getItem('zp_settings');
+    const ss=localStorage.getItem('zp_saved_searches');
+    const sh=localStorage.getItem('zp_search_history');
     if(l) state.leads=JSON.parse(l);
     else state.leads=[...INITIAL_LEADS];
     if(a) state.activity=JSON.parse(a);
     if(s) state.settings=JSON.parse(s);
+    if(ss) state.savedSearches=JSON.parse(ss);
+    if(sh) state.searchHistory=JSON.parse(sh);
   }catch(e){state.leads=[...INITIAL_LEADS];}
 }
 
@@ -875,7 +948,19 @@ function getFilteredLeads(){
   const ca=document.getElementById('f-category').value;
   const ti=document.getElementById('f-tier').value;
   const ws=document.getElementById('f-web').value;
+  const qf=state.activeQuickFilter;
   return state.leads.filter(l=>{
+    if(qf&&qf!=='all'){
+      const act=state.activity[l.id]||{};
+      const stages=act.stages||{};
+      const worked=Object.keys(stages).length>0;
+      const won=stages.decision&&stages.decision.value==='won';
+      const inProgress=worked&&stages.first_call&&!won;
+      if(qf==='hot'&&l.tier!==1)return false;
+      if(qf==='worked'&&!worked)return false;
+      if(qf==='inprogress'&&!inProgress)return false;
+      if(qf==='won'&&!won)return false;
+    }
     if(s&&!(l.name+l.category+l.city+l.pitchAngle+l.notes+'').toLowerCase().includes(s))return false;
     if(st&&l.state!==st)return false;
     if(co&&l.county!==co)return false;
@@ -903,12 +988,20 @@ function renderLeads(){
       return `<div class="${cls}" title="${s.label}"></div>`;
     }).join('');
     const worked=Object.keys(stages).length>0;
+    const visited=act.visitCount>0;
+    const isWon=stages.decision&&stages.decision.value==='won';
+    const isInProgress=worked&&stages.first_call&&!isWon;
     const wsMap={none:'b-red No Website',broken:'b-red Broken Site',outdated:'b-amber Outdated',has_site:'b-green Has Site'};
     const wsParts=(wsMap[l.websiteStatus]||'b-gray Unknown').split(' ');
     const wsClass=wsParts[0];const wsLabel=wsParts.slice(1).join(' ');
     const tierColors=['','b-red','b-amber','b-blue'];
     const tierLabels=['','T1 Hot','T2 Warm','T3 Long'];
-    return `<div class="lead-card t${l.tier}${state.selectedLead===l.id?' selected':''}" onclick="selectLead('${l.id}')">
+    let cardClass=`lead-card t${l.tier}${state.selectedLead===l.id?' selected':''}`;
+    if(isWon)cardClass+=' won-card';
+    else if(isInProgress)cardClass+=' in-progress';
+    else if(visited)cardClass+=' visited-card';
+    const visitLabel=act.visitCount>0?`<span class="badge b-gray" title="Viewed ${act.visitCount}x">👁 ${act.visitCount}x</span>`:'<span class="badge b-gray">NEW</span>';
+    return `<div class="${cardClass}" onclick="selectLead('${l.id}')">
       <div class="card-priority">${l.priority}</div>
       <div class="card-top">
         <div>
@@ -919,7 +1012,7 @@ function renderLeads(){
       <div class="badges">
         <span class="badge ${wsClass}">${wsLabel}</span>
         <span class="badge ${tierColors[l.tier]}">${tierLabels[l.tier]}</span>
-        ${worked?'<span class="badge b-cyan">Working</span>':''}
+        ${worked?'<span class="badge b-amber">Working</span>':visitLabel}
       </div>
       <div class="card-cat">${l.category} · ${l.city}, ${l.state}</div>
       ${l.phone?`<div class="card-phone">${l.phone}</div>`:'<div class="card-phone" style="color:var(--dim)">No phone listed</div>'}
@@ -933,10 +1026,22 @@ function renderLeads(){
 function updateStats(){
   document.getElementById('stat-total').textContent=state.leads.length;
   document.getElementById('stat-hot').textContent=state.leads.filter(l=>l.tier===1).length;
-  const worked=Object.keys(state.activity).filter(id=>Object.keys(state.activity[id].stages||{}).length>0);
-  document.getElementById('stat-worked').textContent=worked.length;
-  const won=Object.values(state.activity).filter(a=>a.stages&&a.stages.decision&&a.stages.decision.value==='won');
-  document.getElementById('stat-won').textContent=won.length;
+  const workedIds=Object.keys(state.activity).filter(id=>Object.keys(state.activity[id].stages||{}).length>0);
+  document.getElementById('stat-worked').textContent=workedIds.length;
+  const wonIds=Object.values(state.activity).filter(a=>a.stages&&a.stages.decision&&a.stages.decision.value==='won');
+  document.getElementById('stat-won').textContent=wonIds.length;
+  const inProgress=Object.entries(state.activity).filter(([id,a])=>{
+    const s=a.stages||{};
+    return Object.keys(s).length>0&&s.first_call&&(!s.decision||s.decision.value!=='won');
+  });
+  const ipEl=document.getElementById('stat-inprogress');
+  if(ipEl)ipEl.textContent=inProgress.length;
+  ['all','hot','worked','inprogress','won'].forEach(f=>{
+    const el=document.getElementById('sf-'+f);
+    if(el)el.classList.toggle('active-filter',state.activeQuickFilter===f);
+  });
+  const ssEl=document.getElementById('nav-searches-count');
+  if(ssEl)ssEl.textContent=state.savedSearches.length;
 }
 
 // ══════════════════════════════════════════════════════
@@ -946,6 +1051,12 @@ function selectLead(id){
   state.selectedLead=id;
   const l=state.leads.find(x=>x.id===id);
   if(!l)return;
+  // Track visit
+  if(!state.activity[id])state.activity[id]={stages:{},history:[]};
+  if(!state.activity[id].visitedAt)state.activity[id].visitedAt=new Date().toISOString();
+  state.activity[id].visitCount=(state.activity[id].visitCount||0)+1;
+  state.activity[id].lastVisitedAt=new Date().toISOString();
+  saveToLS();
   document.querySelectorAll('.lead-card').forEach(c=>c.classList.remove('selected'));
   const cards=document.querySelectorAll('.lead-card');
   cards.forEach(c=>{if(c.querySelector('.card-name').textContent===l.name)c.classList.add('selected');});
@@ -1296,9 +1407,71 @@ function populateFilters(){
   const sel=(id,vals)=>{const el=document.getElementById(id);const cur=el.value;el.innerHTML=`<option value="">${el.options[0].text}</option>`+vals.map(v=>`<option value="${v}">${v}</option>`).join('');el.value=cur;};
   sel('f-state',states);sel('f-county',counties);sel('f-city',cities);sel('f-category',cats);
 }
-function applyFilters(){renderLeads();}
+function captureCurrentFilters(){
+  return{search:document.getElementById('f-search').value,state:document.getElementById('f-state').value,county:document.getElementById('f-county').value,city:document.getElementById('f-city').value,category:document.getElementById('f-category').value,tier:document.getElementById('f-tier').value,web:document.getElementById('f-web').value};
+}
+function buildFilterDesc(f){
+  const parts=[];
+  if(f.search)parts.push('"'+f.search+'"');
+  if(f.tier)parts.push(['','Tier 1 Hot','Tier 2 Warm','Tier 3 Long'][f.tier]||'Tier '+f.tier);
+  if(f.city)parts.push(f.city);
+  if(f.county)parts.push(f.county);
+  if(f.state)parts.push(f.state);
+  if(f.category)parts.push(f.category);
+  if(f.web)parts.push({none:'No Website',broken:'Broken Site',outdated:'Outdated'}[f.web]||f.web);
+  return parts.join(' · ')||'All leads';
+}
+function applyFiltersFromObj(f){
+  document.getElementById('f-search').value=f.search||'';
+  document.getElementById('f-state').value=f.state||'';
+  document.getElementById('f-county').value=f.county||'';
+  document.getElementById('f-city').value=f.city||'';
+  document.getElementById('f-category').value=f.category||'';
+  document.getElementById('f-tier').value=f.tier||'';
+  document.getElementById('f-web').value=f.web||'';
+  state.activeQuickFilter=null;
+  showView('leads',document.querySelector('[data-view=leads]'));
+  renderLeads();
+  updateFilterBar();
+}
+function applyFilters(){
+  const q=document.getElementById('f-search').value.trim();
+  const filters=captureCurrentFilters();
+  const hasFilters=Object.values(filters).some(v=>v);
+  if(hasFilters){
+    const last=state.searchHistory[0];
+    if(!last||JSON.stringify(last.filters)!==JSON.stringify(filters)){
+      state.searchHistory.unshift({id:Date.now(),filters,query:q||buildFilterDesc(filters),timestamp:new Date().toISOString(),resultCount:0});
+      if(state.searchHistory.length>100)state.searchHistory.pop();
+    }
+  }
+  state.activeQuickFilter=hasFilters?null:state.activeQuickFilter;
+  renderLeads();
+  if(state.searchHistory.length>0){state.searchHistory[0].resultCount=getFilteredLeads().length;saveToLS();}
+  updateFilterBar();
+}
+function updateFilterBar(){
+  const bar=document.getElementById('filter-active-bar');
+  const lbl=document.getElementById('filter-active-label');
+  if(!bar)return;
+  const f=captureCurrentFilters();
+  const hasAny=Object.values(f).some(v=>v);
+  const qf=state.activeQuickFilter;
+  if(hasAny||qf){
+    bar.style.display='flex';
+    const count=getFilteredLeads().length;
+    const desc=qf?{all:'All leads',hot:'Tier 1 Hot leads',worked:'Leads with activity',inprogress:'In-progress leads',won:'Closed Won leads'}[qf]:buildFilterDesc(f);
+    if(lbl)lbl.textContent='Showing '+count+' lead'+(count!==1?'s':'')+': '+desc;
+  }else{
+    bar.style.display='none';
+  }
+}
 function clearFilters(){
   ['f-search','f-state','f-county','f-city','f-category','f-tier','f-web'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  state.activeQuickFilter=null;
+  document.querySelectorAll('.ts-btn').forEach(b=>b.classList.remove('active-filter'));
+  const bar=document.getElementById('filter-active-bar');
+  if(bar)bar.style.display='none';
   renderLeads();
 }
 
@@ -1318,6 +1491,8 @@ function showView(view,navEl){
   }
   if(view==='analytics')renderAnalytics();
   if(view==='settings')loadSettingsUI();
+  if(view==='searches')renderSavedSearches();
+  if(view==='history')renderSearchHistory();
   updateStorageInfo();
 }
 
@@ -1762,12 +1937,133 @@ function toggleAutoSync() {
 }
 
 // ══════════════════════════════════════════════════════
+// QUICK FILTER
+// ══════════════════════════════════════════════════════
+function quickFilter(type){
+  if(state.activeQuickFilter===type||type==='all'){
+    state.activeQuickFilter=null;
+    document.querySelectorAll('.ts-btn').forEach(b=>b.classList.remove('active-filter'));
+    const bar=document.getElementById('filter-active-bar');
+    if(bar)bar.style.display='none';
+  }else{
+    state.activeQuickFilter=type;
+  }
+  const leadsNavEl=document.querySelector('[data-view=leads]');
+  showView('leads',leadsNavEl);
+  renderLeads();
+  updateFilterBar();
+  updateStats();
+}
+
+// ══════════════════════════════════════════════════════
+// SAVED SEARCHES
+// ══════════════════════════════════════════════════════
+function saveCurrentSearch(){
+  const filters=captureCurrentFilters();
+  const qf=state.activeQuickFilter;
+  const hasContent=Object.values(filters).some(v=>v)||qf;
+  if(!hasContent){showToast('Apply some filters first, then save');return;}
+  const desc=qf?{all:'All leads',hot:'Tier 1 Hot leads',worked:'Leads with activity',inprogress:'In-progress leads',won:'Closed Won leads'}[qf]:buildFilterDesc(filters);
+  const name=prompt('Name this saved search:',desc);
+  if(!name)return;
+  const count=getFilteredLeads().length;
+  state.savedSearches.unshift({id:Date.now(),name,desc:count+' lead'+(count!==1?'s':''),filters,quickFilter:qf,timestamp:new Date().toISOString()});
+  saveToLS();updateStats();showToast('Search saved: '+name);
+  if(state.currentView==='searches')renderSavedSearches();
+}
+function applySavedSearch(id){
+  const ss=state.savedSearches.find(s=>s.id===id);
+  if(!ss)return;
+  if(ss.quickFilter){
+    state.activeQuickFilter=ss.quickFilter;
+    ['f-search','f-state','f-county','f-city','f-category','f-tier','f-web'].forEach(fid=>{const el=document.getElementById(fid);if(el)el.value='';});
+  }else{
+    state.activeQuickFilter=null;
+    applyFiltersFromObj(ss.filters);
+  }
+  showView('leads',document.querySelector('[data-view=leads]'));
+  renderLeads();updateFilterBar();updateStats();
+  showToast('Applied: '+ss.name);
+}
+function deleteSavedSearch(id,event){
+  event.stopPropagation();
+  state.savedSearches=state.savedSearches.filter(s=>s.id!==id);
+  saveToLS();updateStats();renderSavedSearches();showToast('Search deleted');
+}
+function clearAllSavedSearches(){
+  if(!confirm('Clear all saved searches?'))return;
+  state.savedSearches=[];saveToLS();updateStats();renderSavedSearches();
+}
+function renderSavedSearches(){
+  const container=document.getElementById('saved-searches-list');
+  if(!container)return;
+  if(!state.savedSearches.length){
+    container.innerHTML='<div class="empty"><div class="empty-icon">🔖</div><div class="empty-text">No saved searches yet — apply filters on the leads view and click "Save this search"</div></div>';
+    return;
+  }
+  container.innerHTML=state.savedSearches.map(ss=>{
+    const ts=new Date(ss.timestamp).toLocaleDateString();
+    return`<div class="saved-search-item" onclick="applySavedSearch(${ss.id})">
+      <div style="font-size:20px">🔖</div>
+      <div style="flex:1"><div class="ss-name">${ss.name}</div><div class="ss-desc">${ss.desc} · Saved ${ts}</div></div>
+      <div class="ss-actions">
+        <button class="btn btn-primary btn-sm" onclick="applySavedSearch(${ss.id});event.stopPropagation()">Apply</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteSavedSearch(${ss.id},event)">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// SEARCH HISTORY
+// ══════════════════════════════════════════════════════
+function renderSearchHistory(){
+  const container=document.getElementById('search-history-list');
+  if(!container)return;
+  if(!state.searchHistory.length){
+    container.innerHTML='<div class="empty" style="padding:32px"><div class="empty-text">No search history yet — start filtering leads to build history</div></div>';
+    return;
+  }
+  container.innerHTML=state.searchHistory.slice(0,50).map(h=>{
+    const ts=new Date(h.timestamp).toLocaleString();
+    const desc=h.query||buildFilterDesc(h.filters||{});
+    return`<div class="history-item" onclick="applyHistorySearch('${h.id}')">
+      <span style="font-size:14px;opacity:0.6">🕐</span>
+      <span class="hi-query">${desc}</span>
+      <span class="hi-count">${h.resultCount} result${h.resultCount!==1?'s':''}</span>
+      <span class="hi-time">${ts}</span>
+      <button onclick="saveHistorySearch(${h.id},event)" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer;margin-left:4px;" title="Save">🔖</button>
+    </div>`;
+  }).join('');
+}
+function applyHistorySearch(id){
+  const h=state.searchHistory.find(s=>String(s.id)===String(id));
+  if(!h)return;
+  applyFiltersFromObj(h.filters||{});
+}
+function saveHistorySearch(id,event){
+  event.stopPropagation();
+  const h=state.searchHistory.find(s=>String(s.id)===String(id));
+  if(!h)return;
+  const desc=h.query||buildFilterDesc(h.filters||{});
+  const name=prompt('Name this saved search:',desc);
+  if(!name)return;
+  state.savedSearches.unshift({id:Date.now(),name,desc:h.resultCount+' results',filters:h.filters||{},quickFilter:null,timestamp:new Date().toISOString()});
+  saveToLS();updateStats();showToast('Saved: '+name);
+}
+function clearSearchHistory(){
+  if(!confirm('Clear all search history?'))return;
+  state.searchHistory=[];saveToLS();renderSearchHistory();showToast('History cleared');
+}
+
+// ══════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════
 function init(){
   loadFromLS();
   populateFilters();
   renderLeads();
+  updateStats();
   // Load web app URL into settings field
   const webUrl = localStorage.getItem('zp_webapp_url')||'';
   const webEl = document.getElementById('gs-webapp-url');
